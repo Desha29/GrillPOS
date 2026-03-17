@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static bool isDarkMode = true;
+  static bool isDarkMode = false;
 
   // ─── GrillPOS Brand Colors (always same) ──────────────────────────────
   static const Color warmOrange = Color(0xFFFF5722);       // Primary accent — Grill flame core

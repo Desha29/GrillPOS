@@ -9,6 +9,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/di/dependency_injection.dart';
 import '../../invoice/presentation/invoice_screen.dart';
+import '../../menu/data/menu_models.dart';
 import '../../orders/data/order_models.dart';
 import '../../settings/presentation/cubit/settings_cubit.dart';
 import '../../tables/presentation/cubit/tables_cubit.dart';
@@ -136,27 +137,130 @@ class _MenuSection extends StatelessWidget {
                     style: TextStyle(color: AppColors.creamMuted),
                   ),
                 )
-              : GridView.builder(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    childAspectRatio: 1.6, // Smaller cards fit better for text
-                    crossAxisSpacing: AppSpacing.sm,
-                    mainAxisSpacing: AppSpacing.sm,
+                : GridView.builder(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      childAspectRatio: 1.6, // Smaller cards fit better for text
+                      crossAxisSpacing: AppSpacing.sm,
+                      mainAxisSpacing: AppSpacing.sm,
+                    ),
+                    itemCount: state.visibleItems.length,
+                    itemBuilder: (_, i) {
+                      final item = state.visibleItems[i];
+                      return FoodCard(
+                        item: item,
+                        onTap: () {
+                          if (item.unit == 'كيلو' || 
+                              ['cat_grills', 'cat_kebab', 'cat_kofta'].contains(item.categoryId)) {
+                            _showWeightPicker(context, item);
+                          } else {
+                            cubit.addToCart(item);
+                          }
+                        },
+                      );
+                    },
                   ),
-                  itemCount: state.visibleItems.length,
-                  itemBuilder: (_, i) {
-                    final item = state.visibleItems[i];
-                    return FoodCard(
-                      item: item,
-                      onTap: () => cubit.addToCart(item),
-                    );
-                  },
+          ),
+        ],
+      );
+    }
+
+    void _showWeightPicker(BuildContext context, MenuItem item) {
+      final cubit = context.read<POSCubit>();
+      showDialog(
+        context: context,
+        builder: (dialogCtx) {
+          double customWeight = 1.0;
+          return StatefulBuilder(
+            builder: (context, setState) => AlertDialog(
+              backgroundColor: AppColors.charcoalMedium,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Text('تحديد الكمية - ${item.displayName}', style: TextStyle(color: AppColors.cream)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      _weightButton(setState, 0.25, 'ربع كيلو', () => customWeight = 0.25),
+                      _weightButton(setState, 0.5, 'نصف كيلو', () => customWeight = 0.5),
+                      _weightButton(setState, 0.75, 'كيلو إلا ربع', () => customWeight = 0.75),
+                      _weightButton(setState, 1.0, '1 كيلو', () => customWeight = 1.0),
+                      _weightButton(setState, 1.5, '1.5 كيلو', () => customWeight = 1.5),
+                      _weightButton(setState, 2.0, '2 كيلو', () => customWeight = 2.0),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Divider(color: AppColors.borderColor),
+                  const SizedBox(height: 10),
+                  Text('كمية مخصصة', style: TextStyle(color: AppColors.creamMuted, fontSize: 13)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.remove_circle_outline, color: AppColors.warmOrange),
+                        onPressed: () => setState(() => customWeight = (customWeight - 0.05).clamp(0.05, 50.0)),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceDark,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.borderColor),
+                        ),
+                        child: Text(
+                          customWeight.toStringAsFixed(3),
+                          style: TextStyle(color: AppColors.warmOrange, fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.add_circle_outline, color: AppColors.warmOrange),
+                        onPressed: () => setState(() => customWeight += 0.05),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogCtx),
+                  child: Text('إلغاء', style: TextStyle(color: AppColors.mutedColor)),
                 ),
+                ElevatedButton(
+                  onPressed: () {
+                    cubit.addToCart(item, quantity: customWeight);
+                    Navigator.pop(dialogCtx);
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.warmOrange),
+                  child: const Text('إضافة للسلة', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
+    Widget _weightButton(StateSetter setState, double weight, String label, VoidCallback onSelect) {
+      return InkWell(
+        onTap: () {
+          onSelect();
+          setState(() {});
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.charcoalLight,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.borderColor),
+          ),
+          child: Text(label, style: TextStyle(color: AppColors.cream, fontSize: 13)),
         ),
-      ],
-    );
-  }
+      );
+    }
 }
 
 class _CartSection extends StatelessWidget {
@@ -330,9 +434,15 @@ class _CartSection extends StatelessWidget {
 
                       return CartItemWidget(
                         item: item,
-                        onAdd: () => cubit.addToCart(c.item),
-                        onRemove: () => cubit.decrementItem(c.item.id),
-                        onDelete: () => cubit.removeFromCart(c.item.id),
+                        onAdd: () {
+                          final step = (item.unit == 'كيلو') ? 0.25 : 1.0;
+                          cubit.updateQuantity(item.menuItemId, item.quantity + step);
+                        },
+                        onRemove: () {
+                          final step = (item.unit == 'كيلو') ? 0.25 : 1.0;
+                          cubit.updateQuantity(item.menuItemId, item.quantity - step);
+                        },
+                        onDelete: () => cubit.removeFromCart(item.menuItemId),
                         onAddNote: () {},
                       );
                     },
@@ -359,8 +469,20 @@ class _CartSection extends StatelessWidget {
                   onPressed: state.cart.isEmpty
                       ? () {}
                       : () async {
-                          final order = await context.read<POSCubit>().checkout();
-                          if (order == null || !context.mounted) return;
+                          final cubit = context.read<POSCubit>();
+                          final order = await cubit.checkout();
+                          if (!context.mounted) return;
+                          
+                          if (order == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(cubit.state.error ?? 'خطأ أثناء إتمام الطلب'),
+                                backgroundColor: AppColors.grillRed,
+                              ),
+                            );
+                            return;
+                          }
+                          
                           final storeInfo = getIt<SettingsCubit>().currentStoreInfo;
                           Navigator.of(context).push(
                             MaterialPageRoute(

@@ -3,7 +3,7 @@ import '../constants/app_colors.dart';
 
 class ThemeState {
   final bool isDarkMode;
-  const ThemeState({this.isDarkMode = true});
+  const ThemeState({this.isDarkMode = false});
   
   ThemeState copyWith({bool? isDarkMode}) {
     return ThemeState(isDarkMode: isDarkMode ?? this.isDarkMode);

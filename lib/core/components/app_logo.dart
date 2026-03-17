@@ -20,7 +20,7 @@ class AppLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<SettingsCubit, SettingsStates>(
-      bloc: getIt<SettingsCubit>(), 
+      bloc: getIt<SettingsCubit>(),
       builder: (context, state) {
         final storeInfo = getIt<SettingsCubit>().currentStoreInfo;
 
@@ -31,6 +31,7 @@ class AppLogo extends StatelessWidget {
           if (file.existsSync()) {
             return Image.file(
               file,
+              key: ValueKey(file.lastModifiedSync().millisecondsSinceEpoch),
               width: width,
               height: height,
               fit: fit,

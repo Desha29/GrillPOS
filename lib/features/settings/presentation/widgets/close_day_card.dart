@@ -21,8 +21,8 @@ class CloseDayCard extends StatelessWidget {
         side: BorderSide(color: AppColors.borderColor),
       ),
       child: InkWell(
-        onTap: () => UserCubit.get(context).closeSession(),
         borderRadius: BorderRadius.circular(16),
+        onTap: () => UserCubit.get(context).closeSession(),
         child: Padding(
           padding: EdgeInsets.all(isMobile ? 16 : 24),
           child: Row(

@@ -87,6 +87,8 @@ class _RecentOperationsState extends State<RecentOperations> {
         return LucideIcons.printer;
       case ActivityType.login:
         return LucideIcons.key;
+      case ActivityType.logout:
+        return LucideIcons.key;
     }
   }
 
@@ -124,6 +126,9 @@ class _RecentOperationsState extends State<RecentOperations> {
         return Colors.blueGrey;
       case ActivityType.login:
         return Colors.cyan;
+      case ActivityType.logout:
+      return Colors.cyan;
+        
     }
   }
 
@@ -161,6 +166,8 @@ class _RecentOperationsState extends State<RecentOperations> {
         return 'طباعة تقرير';
       case ActivityType.login:
         return 'تسجيل دخول';
+      case ActivityType.logout:
+        return 'تسجيل خروج';
     }
   }
 

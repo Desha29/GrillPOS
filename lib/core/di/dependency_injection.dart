@@ -15,9 +15,9 @@ import 'package:get_it/get_it.dart';
 import '../../features/settings/data/data_source/store_info_data_source.dart';
 import '../../features/settings/data/repository/settings_repository_imp.dart';
 import '../../features/settings/presentation/cubit/settings_cubit.dart';
-import '../../features/sessions/data/repositories/session_repository_impl.dart';
-import '../../core/services/activity_logger.dart';
-import '../../core/session/session_manager.dart';
+import '../services/activity_logger.dart';
+
+
 
 final getIt = GetIt.instance;
 
@@ -25,8 +25,7 @@ void setup() {
   // Core Services
   getIt.registerSingleton<ActivityLogger>(ActivityLogger());
 
-  // Repositories
-  getIt.registerSingleton<SessionRepositoryImpl>(SessionRepositoryImpl());
+ 
 
   // GrillPOS repositories
   getIt.registerLazySingleton<MenuRepository>(() => MenuRepository());
@@ -34,17 +33,14 @@ void setup() {
   getIt.registerLazySingleton<OrdersRepository>(() => OrdersRepository());
   getIt.registerLazySingleton<ReportsRepository>(() => ReportsRepository());
 
-  // Session Manager (wraps SessionRepositoryImpl)
-  final sessionManager = SessionManager();
-  sessionManager.initialize(getIt<SessionRepositoryImpl>());
-  getIt.registerSingleton<SessionManager>(sessionManager);
+
 
   final userRepo = UserRepositoryImp();
   getIt.registerSingleton<UserRepositoryInt>(userRepo);
 
   getIt.registerSingleton<UserCubit>(UserCubit(
       userRepository: userRepo,
-      sessionRepository: getIt<SessionRepositoryImpl>()));
+  ));
 
   final storeInfoRepo = StoreInfoRepository(
     dataSource: StoreInfoDataSource(),

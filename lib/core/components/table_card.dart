@@ -107,7 +107,7 @@ class _TableCardState extends State<TableCard> with SingleTickerProviderStateMix
               child: Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -117,16 +117,17 @@ class _TableCardState extends State<TableCard> with SingleTickerProviderStateMix
                   ),
                   child: Icon(statusIcon, color: statusColor, size: 28),
                 ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  widget.table.displayName,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.cream,
+                Flexible(
+                  child: Text(
+                    widget.table.displayName,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.cream,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(height: 4),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -141,7 +142,6 @@ class _TableCardState extends State<TableCard> with SingleTickerProviderStateMix
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.md),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(

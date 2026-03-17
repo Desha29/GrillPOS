@@ -1,6 +1,6 @@
 
 
-import '../../../sessions/data/models/session_model.dart';
+
 
 abstract class UserStates {}
 
@@ -19,8 +19,8 @@ class UserSuccess extends UserStates {
 class UserSuccessWithReport extends UserStates {
   final String message;
   final dynamic report;
-  final Session session;
-  UserSuccessWithReport(this.message, this.report, this.session);
+
+  UserSuccessWithReport(this.message, this.report,);
 }
 
 class LoginSuccess extends UserStates {

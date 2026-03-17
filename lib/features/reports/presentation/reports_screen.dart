@@ -35,43 +35,65 @@ class _ReportsView extends StatelessWidget {
             return Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
+                  padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
                   child: ScreenHeader(
                     title: 'التقارير والإحصائيات',
                     subtitle: 'تحليل أداء المبيعات والأصناف الأكثر طلباً',
                     icon: Icons.pie_chart_outline,
                     trailingIcon: Icons.refresh,
-                    onTrailingPressed: () => context.read<ReportsCubit>().load(),
+                    onTrailingPressed: () =>
+                        context.read<ReportsCubit>().load(),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 if (state.loading && state.summary == null)
-                  Expanded(child: Center(child: CircularProgressIndicator(color: AppColors.warmOrange))),
+                  Expanded(
+                      child: Center(
+                          child: CircularProgressIndicator(
+                              color: AppColors.warmOrange))),
                 if (state.error != null && state.summary == null)
                   Expanded(
                     child: Center(
-                      child: Text(state.error!, style: TextStyle(color: AppColors.grillRed)),
+                      child: Text(state.error!,
+                          style: TextStyle(color: AppColors.grillRed)),
                     ),
                   ),
-                if (state.summary != null || (state.summary == null && !state.loading))
+                if (state.summary != null ||
+                    (state.summary == null && !state.loading))
                   Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                    child: Column(
                       children: [
-                        _buildStatsGrid(context, state.summary, state.topItems.length),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                          child: _buildStatsGrid(
+                              context, state.summary, state.topItems.length),
+                        ),
                         const SizedBox(height: AppSpacing.lg),
-                        _ChartCard(
-                          title: 'اتجاه الإيرادات (آخر 7 أيام)',
-                          subtitle: 'متابعة النمو اليومي للمبيعات',
-                          child: SizedBox(height: 240, child: _TrendChart(points: state.trend)),
+                        Expanded(
+                          child: ListView(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.lg),
+                            children: [
+                              _ChartCard(
+                                title: 'اتجاه الإيرادات (آخر 7 أيام)',
+                                subtitle: 'متابعة النمو اليومي للمبيعات',
+                                child: SizedBox(
+                                    height: 240,
+                                    child: _TrendChart(points: state.trend)),
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              _ChartCard(
+                                title: 'الأصناف الأكثر مبيعاً',
+                                subtitle: 'ترتيب الأصناف حسب كمية الطلب',
+                                child: SizedBox(
+                                    height: 240,
+                                    child: _TopItemsChart(items: state.topItems)),
+                              ),
+                              const SizedBox(height: AppSpacing.xl),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: AppSpacing.md),
-                        _ChartCard(
-                          title: 'الأصناف الأكثر مبيعاً',
-                          subtitle: 'ترتيب الأصناف حسب كمية الطلب',
-                          child: SizedBox(height: 240, child: _TopItemsChart(items: state.topItems)),
-                        ),
-                        const SizedBox(height: AppSpacing.xl),
                       ],
                     ),
                   ),
@@ -83,8 +105,10 @@ class _ReportsView extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsGrid(BuildContext context, ReportsSummary? summary, int topItemsCount) {
-    final s = summary ?? const ReportsSummary(revenue: 0, ordersCount: 0, avgOrder: 0);
+  Widget _buildStatsGrid(
+      BuildContext context, ReportsSummary? summary, int topItemsCount) {
+    final s = summary ??
+        const ReportsSummary(revenue: 0, ordersCount: 0, avgOrder: 0);
     return GridView.count(
       crossAxisCount: MediaQuery.of(context).size.width > 1200 ? 4 : 2,
       crossAxisSpacing: AppSpacing.md,
@@ -154,7 +178,10 @@ class _ChartCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-              style: TextStyle(color: AppColors.cream, fontSize: 18, fontWeight: FontWeight.bold)),
+              style: TextStyle(
+                  color: AppColors.cream,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           Text(subtitle,
               style: TextStyle(color: AppColors.creamMuted, fontSize: 12)),
@@ -178,7 +205,8 @@ class _TrendChart extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.show_chart, size: 48, color: AppColors.mutedColor.withOpacity(0.4)),
+            Icon(Icons.show_chart,
+                size: 48, color: AppColors.mutedColor.withOpacity(0.4)),
             const SizedBox(height: AppSpacing.sm),
             Text('لا توجد بيانات',
                 style: TextStyle(color: AppColors.creamMuted)),
@@ -190,23 +218,113 @@ class _TrendChart extends StatelessWidget {
     return LineChart(
       LineChartData(
         backgroundColor: Colors.transparent,
-        gridData: const FlGridData(show: true),
-        borderData: FlBorderData(
-            show: true, border: Border.all(color: AppColors.borderColor)),
-        titlesData: const FlTitlesData(show: false),
+        lineTouchData: LineTouchData(
+          enabled: true,
+          handleBuiltInTouches: true,
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (_) => AppColors.charcoalDark,
+            getTooltipItems: (touchedSpots) {
+              return touchedSpots.map((LineBarSpot touchedSpot) {
+                return LineTooltipItem(
+                  '${touchedSpot.y.toStringAsFixed(1)} ج.م',
+                  const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                );
+              }).toList();
+            },
+          ),
+        ),
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: 1000,
+          getDrawingHorizontalLine: (value) {
+            return FlLine(
+                color: AppColors.borderColor.withOpacity(0.5), strokeWidth: 1);
+          },
+        ),
+        borderData: FlBorderData(show: false),
+        titlesData: FlTitlesData(
+          show: true,
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, meta) {
+                if (value.toInt() >= 0 && value.toInt() < points.length) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      points[value.toInt()].day.length >= 10
+                          ? points[value.toInt()].day.substring(5)
+                          : points[value.toInt()].day,
+                      style: TextStyle(
+                          color: AppColors.creamMuted,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  );
+                }
+                return const SizedBox();
+              },
+              reservedSize: 32,
+              interval: 1,
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, meta) {
+                if (value == 0) return const SizedBox();
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Text(
+                    value.toInt() >= 1000
+                        ? '${(value / 1000).toStringAsFixed(1)}k'
+                        : value.toInt().toString(),
+                    style: TextStyle(color: AppColors.mutedColor, fontSize: 10),
+                    textAlign: TextAlign.right,
+                  ),
+                );
+              },
+              reservedSize: 45,
+            ),
+          ),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        ),
         lineBarsData: [
           LineChartBarData(
             isCurved: true,
             color: AppColors.warmOrange,
-            barWidth: 3,
+            barWidth: 4,
+            isStrokeCapRound: true,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, barData, index) {
+                return FlDotCirclePainter(
+                  radius: 4,
+                  color: AppColors.warmOrange,
+                  strokeWidth: 2,
+                  strokeColor: AppColors.surfaceDark,
+                );
+              },
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.warmOrange.withOpacity(0.5),
+                  AppColors.warmOrange.withOpacity(0.0),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
             spots: List.generate(
               points.length,
               (i) => FlSpot(i.toDouble(), points[i].value),
-            ),
-            dotData: const FlDotData(show: true),
-            belowBarData: BarAreaData(
-              show: true,
-              color: AppColors.warmOrange.withOpacity(0.1),
             ),
           ),
         ],
@@ -227,7 +345,8 @@ class _TopItemsChart extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.bar_chart, size: 48, color: AppColors.mutedColor.withOpacity(0.4)),
+            Icon(Icons.bar_chart,
+                size: 48, color: AppColors.mutedColor.withOpacity(0.4)),
             const SizedBox(height: AppSpacing.sm),
             Text('لا توجد بيانات',
                 style: TextStyle(color: AppColors.creamMuted)),
@@ -240,10 +359,75 @@ class _TopItemsChart extends StatelessWidget {
 
     return BarChart(
       BarChartData(
-        borderData: FlBorderData(
-            show: true, border: Border.all(color: AppColors.borderColor)),
-        titlesData: const FlTitlesData(show: false),
-        gridData: const FlGridData(show: true),
+        barTouchData: BarTouchData(
+          enabled: true,
+          touchTooltipData: BarTouchTooltipData(
+            getTooltipColor: (_) => AppColors.charcoalDark,
+            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+              return BarTooltipItem(
+                '${bars[groupIndex].name}\n${rod.toY.toInt()} طلب',
+                const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
+              );
+            },
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: 10,
+          getDrawingHorizontalLine: (value) {
+            return FlLine(
+                color: AppColors.borderColor.withOpacity(0.5), strokeWidth: 1);
+          },
+        ),
+        titlesData: FlTitlesData(
+          show: true,
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, meta) {
+                if (value.toInt() >= 0 && value.toInt() < bars.length) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      bars[value.toInt()].name,
+                      style: TextStyle(
+                          color: AppColors.creamMuted,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }
+                return const SizedBox();
+              },
+              reservedSize: 32,
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, meta) {
+                if (value == 0) return const SizedBox();
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Text(
+                    value.toInt().toString(),
+                    style: TextStyle(color: AppColors.mutedColor, fontSize: 10),
+                    textAlign: TextAlign.right,
+                  ),
+                );
+              },
+              reservedSize: 35,
+            ),
+          ),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        ),
         barGroups: List.generate(
           bars.length,
           (i) => BarChartGroupData(
@@ -251,9 +435,16 @@ class _TopItemsChart extends StatelessWidget {
             barRods: [
               BarChartRodData(
                 toY: bars[i].qty.toDouble(),
-                color: AppColors.ember,
-                borderRadius: BorderRadius.circular(6),
-                width: 18,
+                gradient: LinearGradient(
+                  colors: [AppColors.ember, AppColors.warmOrange],
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(6),
+                  topRight: Radius.circular(6),
+                ),
+                width: 20,
               ),
             ],
           ),

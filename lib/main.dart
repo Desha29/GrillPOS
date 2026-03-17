@@ -20,7 +20,7 @@ import 'features/auth/presentation/cubit/user_cubit.dart';
 import 'features/auth/presentation/cubit/user_states.dart';
 import 'secrets.dart';
 import 'core/data/services/persistence_initializer.dart';
-import 'features/sessions/data/repositories/session_repository_impl.dart';
+
 import 'core/services/activity_logger.dart';
 import 'core/data/services/recovery_service.dart';
 import 'core/data/services/checkpoint_service.dart';
@@ -41,20 +41,14 @@ Future<void> _initializePersistenceSystem() async {
         final settings =
             await PersistenceInitializer.settingsRepository!.getStoreSettings();
 
-        FileLogger.info('Store settings loaded: ${settings.storeName}',
+        FileLogger.info('Settings loaded: ${settings.storeName}',
             source: 'Init');
       } catch (e) {
-        FileLogger.warning('Store settings error', error: e, source: 'Init');
+        FileLogger.warning('Settings error', error: e, source: 'Init');
       }
 
-      // Load current session
-      await getIt<SessionRepositoryImpl>().loadCurrentSession();
-      final session = getIt<SessionRepositoryImpl>().getCurrentSession();
-      if (session != null) {
-        FileLogger.info('Resumed open session: ${session.id}', source: 'Init');
-      } else {
-        FileLogger.info('No open session to resume', source: 'Init');
-      }
+ 
+    
 
       await RecoveryService().check();
 

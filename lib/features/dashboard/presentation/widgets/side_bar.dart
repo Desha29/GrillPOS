@@ -113,11 +113,14 @@ class _CustomSidebarState extends State<CustomSidebar>
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: IconButton(
                     icon: Icon(
-                      widget.isCollapsed ? LucideIcons.chevronRight : LucideIcons.chevronLeft,
+                      widget.isCollapsed
+                          ? LucideIcons.chevronRight
+                          : LucideIcons.chevronLeft,
                       color: AppColors.mutedColor,
                       size: 18,
                     ),
-                    tooltip: widget.isCollapsed ? 'توسيع القائمة' : 'تصغير القائمة',
+                    tooltip:
+                        widget.isCollapsed ? 'توسيع القائمة' : 'تصغير القائمة',
                     onPressed: widget.onToggleCollapse,
                   ),
                 ),
@@ -147,28 +150,39 @@ class _CustomSidebarState extends State<CustomSidebar>
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 child: BlocBuilder<ThemeCubit, ThemeState>(
                   builder: (context, themeState) {
-                    return ListTile(
-                      dense: true,
-                      leading: Icon(
-                        themeState.isDarkMode ? LucideIcons.sun : LucideIcons.moon,
-                        color: AppColors.ember,
-                        size: 20,
-                      ),
-                      title: w > 100
-                          ? FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.centerRight,
-                              child: Text(
-                                themeState.isDarkMode ? 'الوضع الفاتح' : 'الوضع الداكن',
-                                style: TextStyle(
-                                  color: AppColors.creamMuted,
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 14,
+                    return InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () => context.read<ThemeCubit>().toggleTheme(),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        child: Row(
+                          children: [
+                            Icon(
+                              themeState.isDarkMode
+                                  ? LucideIcons.sun
+                                  : LucideIcons.moon,
+                              color: AppColors.ember,
+                              size: 20,
+                            ),
+                            if (w > 100) ...[
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Text(
+                                  themeState.isDarkMode
+                                      ? 'الوضع الفاتح'
+                                      : 'الوضع الداكن',
+                                  style: TextStyle(
+                                    color: AppColors.creamMuted,
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                  ),
                                 ),
                               ),
-                            )
-                          : null,
-                      onTap: () => context.read<ThemeCubit>().toggleTheme(),
+                            ]
+                          ],
+                        ),
+                      ),
                     );
                   },
                 ),
@@ -186,30 +200,34 @@ class _CustomSidebarState extends State<CustomSidebar>
                 height: 1,
                 thickness: 0.5,
               ),
-              ListTile(
-                dense: true,
-                leading: Icon(
-                  LucideIcons.logOut,
-                  color: AppColors.grillRed,
-                  size: 20,
-                ),
-                title: w > 100
-                    ? FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          "تسجيل الخروج",
-                          style: TextStyle(
-                            color: AppColors.grillRed,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
+              InkWell(
+                onTap: () => handleLogout(context),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  child: Row(
+                    children: [
+                      Icon(
+                        LucideIcons.logOut,
+                        color: AppColors.grillRed,
+                        size: 20,
+                      ),
+                      if (w > 100) ...[
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            "تسجيل الخروج",
+                            style: TextStyle(
+                              color: AppColors.grillRed,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
-                      )
-                    : null,
-                onTap: () {
-                  handleLogout(context);
-                },
+                      ]
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: 10),
             ],
@@ -239,15 +257,21 @@ class _CustomSidebarState extends State<CustomSidebar>
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: isManager ? AppColors.warmOrange.withOpacity(0.2) : AppColors.charcoalLight,
+                  color: isManager
+                      ? AppColors.warmOrange.withOpacity(0.2)
+                      : AppColors.charcoalLight,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: isManager ? AppColors.warmOrange.withOpacity(0.4) : AppColors.borderColor,
+                    color: isManager
+                        ? AppColors.warmOrange.withOpacity(0.4)
+                        : AppColors.borderColor,
                   ),
                 ),
                 child: Center(
                   child: Text(
-                    currentUser.name.isNotEmpty ? currentUser.name[0].toUpperCase() : '?',
+                    currentUser.name.isNotEmpty
+                        ? currentUser.name[0].toUpperCase()
+                        : '?',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: isManager ? AppColors.warmOrange : AppColors.cream,
@@ -274,7 +298,8 @@ class _CustomSidebarState extends State<CustomSidebar>
                       isManager ? 'مدير' : 'كاشير',
                       style: TextStyle(
                         fontSize: 11,
-                        color: isManager ? AppColors.ember : AppColors.mutedColor,
+                        color:
+                            isManager ? AppColors.ember : AppColors.mutedColor,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -363,7 +388,8 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
             ? AppColors.charcoalLight.withOpacity(0.4)
             : Colors.transparent;
 
-    final fgIcon = widget.isSelected ? AppColors.warmOrange : AppColors.mutedColor;
+    final fgIcon =
+        widget.isSelected ? AppColors.warmOrange : AppColors.mutedColor;
 
     final titleStyle = TextStyle(
       fontSize: 14,
@@ -381,14 +407,17 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(10),
-          border: widget.isSelected ? Border.all(color: AppColors.warmOrange.withOpacity(0.2)) : null,
+          border: widget.isSelected
+              ? Border.all(color: AppColors.warmOrange.withOpacity(0.2))
+              : null,
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: widget.onTap,
             borderRadius: BorderRadius.circular(10),
-            hoverColor: Colors.transparent, // Let AnimatedContainer handle color
+            hoverColor:
+                Colors.transparent, // Let AnimatedContainer handle color
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               child: Row(

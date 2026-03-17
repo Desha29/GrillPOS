@@ -11,8 +11,7 @@ import '../../../core/di/dependency_injection.dart';
 import '../../auth/data/models/user_model.dart';
 import '../../auth/presentation/cubit/user_states.dart';
 
-import '../../sessions/data/models/daily_report_model.dart';
-import '../../sessions/presentation/screens/daily_report_preview_screen.dart';
+
 import 'widgets/close_day_card.dart';
 import 'widgets/logout_warning_banner.dart';
 import 'widgets/store_info_card.dart';
@@ -58,7 +57,7 @@ class _SettingsScreenContent extends StatelessWidget {
 
             final userCubit = getIt<UserCubit>();
             if (userCubit.currentUser.userType == UserType.manager) {
-              _showReportDialog(context, state.report);
+              _showReportDialog(context);
             } else {
               MotionSnackBarSuccess(context, "تم إغلاق اليوم بنجاح. جاري تسجيل الخروج...");
               Future.delayed(const Duration(milliseconds: 1500), () {
@@ -112,7 +111,7 @@ class _SettingsScreenContent extends StatelessWidget {
     );
   }
 
-  void _showReportDialog(BuildContext context, DailyReport report) {
+  void _showReportDialog(BuildContext context) {
     final userCubit = getIt<UserCubit>();
     final isManager = userCubit.currentUser.userType == UserType.manager;
 
@@ -142,9 +141,7 @@ class _SettingsScreenContent extends StatelessWidget {
             onPressed: () {
               Navigator.pop(ctx);
               if (isManager) {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => DailyReportPreviewScreen(report: report)),
-                );
+            
               } else {
                 userCubit.logout();
                 Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);

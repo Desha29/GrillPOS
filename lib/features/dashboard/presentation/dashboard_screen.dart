@@ -23,6 +23,7 @@ import '../../menu/presentation/menu_management_screen.dart';
 import '../../reports/presentation/reports_screen.dart';
 import '../../auth/presentation/user_management_screen.dart';
 
+
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -75,6 +76,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         title: "المنيو",
         screen: const MenuManagementScreen(),
       ),
+   
       if (curUser.userType == UserType.manager)
         SidebarItem(
           id: 'reports',
@@ -110,56 +112,56 @@ class _DashboardScreenState extends State<DashboardScreen> {
           return Scaffold(
             key: ValueKey(themeState.isDarkMode),
             appBar: isMobileOrTablet
-            ? AppBar(
-                backgroundColor: AppColors.charcoalMedium,
-                title: BlocBuilder<SettingsCubit, SettingsStates>(
-                    bloc: getIt<SettingsCubit>(),
-                    builder: (context, state) {
-                      final name =
-                          getIt<SettingsCubit>().currentStoreInfo?.name ??
-                              'GrillPOS';
-                      return Text(name.isNotEmpty ? name : 'GrillPOS');
-                    }),
-                leading: Builder(
-                  builder: (context) => IconButton(
-                    icon: const Icon(LucideIcons.menu),
-                    onPressed: () => Scaffold.of(context).openDrawer(),
+                ? AppBar(
+                    backgroundColor: AppColors.charcoalMedium,
+                    title: BlocBuilder<SettingsCubit, SettingsStates>(
+                        bloc: getIt<SettingsCubit>(),
+                        builder: (context, state) {
+                          final name =
+                              getIt<SettingsCubit>().currentStoreInfo?.name ??
+                                  'GrillPOS';
+                          return Text(name.isNotEmpty ? name : 'GrillPOS');
+                        }),
+                    leading: Builder(
+                      builder: (context) => IconButton(
+                        icon: const Icon(LucideIcons.menu),
+                        onPressed: () => Scaffold.of(context).openDrawer(),
+                      ),
+                    ),
+                  )
+                : null,
+            drawer: isMobileOrTablet
+                ? Drawer(
+                    child: CustomSidebar(
+                      items: sidebarItems,
+                      selectedIndex: selectedIndex,
+                      onItemSelected: (index) =>
+                          _onSidebarSelected(context, index),
+                    ),
+                  )
+                : null,
+            body: Row(
+              children: [
+                if (!isMobileOrTablet)
+                  CustomSidebar(
+                    items: sidebarItems,
+                    selectedIndex: selectedIndex,
+                    isCollapsed: isSidebarCollapsed,
+                    onItemSelected: (index) =>
+                        _onSidebarSelected(context, index),
+                    onToggleCollapse: () {
+                      setState(() {
+                        isSidebarCollapsed = !isSidebarCollapsed;
+                      });
+                    },
+                  ),
+                Expanded(
+                  child: Container(
+                    color: AppColors.charcoalDark,
+                    child: sidebarItems[selectedIndex].screen,
                   ),
                 ),
-              )
-            : null,
-        drawer: isMobileOrTablet
-            ? Drawer(
-                child: CustomSidebar(
-                  items: sidebarItems,
-                  selectedIndex: selectedIndex,
-                  onItemSelected: (index) =>
-                      _onSidebarSelected(context, index),
-                ),
-              )
-            : null,
-        body: Row(
-          children: [
-            if (!isMobileOrTablet)
-              CustomSidebar(
-                items: sidebarItems,
-                selectedIndex: selectedIndex,
-                isCollapsed: isSidebarCollapsed,
-                onItemSelected: (index) =>
-                    _onSidebarSelected(context, index),
-                onToggleCollapse: () {
-                  setState(() {
-                    isSidebarCollapsed = !isSidebarCollapsed;
-                  });
-                },
-              ),
-            Expanded(
-              child: Container(
-                color: AppColors.charcoalDark,
-                child: sidebarItems[selectedIndex].screen,
-              ),
-            ),
-          ],
+              ],
             ),
           );
         },

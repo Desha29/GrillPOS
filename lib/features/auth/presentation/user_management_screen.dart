@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/components/screen_header.dart';
 import '../../../core/constants/app_colors.dart';
@@ -26,6 +27,9 @@ class _UserManagementView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final columns = width > 1400 ? 5 : width > 1100 ? 4 : width > 800 ? 3 : width > 500 ? 2 : 1;
+
     return Scaffold(
       backgroundColor: AppColors.charcoalDark,
       body: SafeArea(
@@ -37,33 +41,54 @@ class _UserManagementView extends StatelessWidget {
               ScreenHeader(
                 title: 'إدارة الفريق',
                 subtitle: 'إدارة صلاحيات المدير والكاشير',
-                icon: Icons.people_outline,
+                icon: LucideIcons.users,
                 trailingIcon: Icons.person_add,
                 onTrailingPressed: () => _showAddUserDialog(context),
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.lg),
               Expanded(
                 child: BlocBuilder<UserCubit, UserStates>(
                   builder: (context, state) {
                     if (state is UserLoading) {
-                      return Center(child: CircularProgressIndicator(color: AppColors.warmOrange));
+                      return Center(
+                          child: CircularProgressIndicator(
+                              color: AppColors.warmOrange));
                     }
 
                     final users = getIt<UserCubit>().allUsers;
                     if (users.isEmpty) {
                       return Center(
-                        child: Text(
-                          'لا يوجد مستخدمين',
-                          style: TextStyle(color: AppColors.creamMuted),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(LucideIcons.users,
+                                size: 64,
+                                color: AppColors.mutedColor.withOpacity(0.3)),
+                            const SizedBox(height: 16),
+                            Text(
+                              'لا يوجد مستخدمين',
+                              style: TextStyle(
+                                  color: AppColors.creamMuted, fontSize: 16),
+                            ),
+                          ],
                         ),
                       );
                     }
 
-                    return ListView.builder(
+                    return GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: columns,
+                        crossAxisSpacing: AppSpacing.md,
+                        mainAxisSpacing: AppSpacing.md,
+                        childAspectRatio: columns > 3 ? 0.82 : 1.1,
+                      ),
                       itemCount: users.length,
                       itemBuilder: (context, index) {
-                        final user = users[index];
-                        return _UserTile(user: user);
+                        return _AnimatedUserCard(
+                          user: users[index],
+                          index: index,
+                          columns: columns,
+                        );
                       },
                     );
                   },
@@ -121,7 +146,8 @@ class _UserManagementView extends StatelessWidget {
                     style: TextStyle(color: AppColors.cream),
                     decoration: InputDecoration(
                       labelText: 'الاسم كامل',
-                      prefixIcon: Icon(Icons.badge, color: AppColors.mutedColor),
+                      prefixIcon:
+                          Icon(Icons.badge, color: AppColors.mutedColor),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -130,7 +156,8 @@ class _UserManagementView extends StatelessWidget {
                     style: TextStyle(color: AppColors.cream),
                     decoration: InputDecoration(
                       labelText: 'اسم المستخدم للدخول',
-                      prefixIcon: Icon(Icons.person, color: AppColors.mutedColor),
+                      prefixIcon:
+                          Icon(Icons.person, color: AppColors.mutedColor),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -140,7 +167,8 @@ class _UserManagementView extends StatelessWidget {
                     style: TextStyle(color: AppColors.cream),
                     decoration: InputDecoration(
                       labelText: 'كلمة المرور',
-                      prefixIcon: Icon(Icons.lock, color: AppColors.mutedColor),
+                      prefixIcon:
+                          Icon(Icons.lock, color: AppColors.mutedColor),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -150,15 +178,18 @@ class _UserManagementView extends StatelessWidget {
                     style: TextStyle(color: AppColors.cream, fontSize: 16),
                     icon: Icon(Icons.arrow_drop_down, color: AppColors.cream),
                     items: const [
-                      DropdownMenuItem(value: 'manager', child: Text('مدير النظام')),
-                      DropdownMenuItem(value: 'cashier', child: Text('كاشير مبيعات')),
+                      DropdownMenuItem(
+                          value: 'manager', child: Text('مدير النظام')),
+                      DropdownMenuItem(
+                          value: 'cashier', child: Text('كاشير مبيعات')),
                     ],
                     onChanged: (v) {
                       if (v != null) setState(() => selectedRole = v);
                     },
                     decoration: InputDecoration(
                       labelText: 'نوع الصلاحية',
-                      prefixIcon: Icon(Icons.admin_panel_settings, color: AppColors.mutedColor),
+                      prefixIcon: Icon(Icons.admin_panel_settings,
+                          color: AppColors.mutedColor),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xl),
@@ -178,7 +209,9 @@ class _UserManagementView extends StatelessWidget {
                           final name = nameCtrl.text.trim();
                           final username = usernameCtrl.text.trim();
                           final password = passwordCtrl.text.trim();
-                          if (name.isEmpty || username.isEmpty || password.isEmpty) return;
+                          if (name.isEmpty ||
+                              username.isEmpty ||
+                              password.isEmpty) return;
                           getIt<UserCubit>().saveUser(
                             User(
                               username: username,
@@ -197,7 +230,8 @@ class _UserManagementView extends StatelessWidget {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.warmOrange,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 12),
                         ),
                       ),
                     ],
@@ -212,66 +246,333 @@ class _UserManagementView extends StatelessWidget {
   }
 }
 
-class _UserTile extends StatelessWidget {
+class _AnimatedUserCard extends StatefulWidget {
   final User user;
+  final int index;
+  final int columns;
 
-  const _UserTile({required this.user});
+  const _AnimatedUserCard({required this.user, required this.index, required this.columns});
+
+  @override
+  State<_AnimatedUserCard> createState() => _AnimatedUserCardState();
+}
+
+class _AnimatedUserCardState extends State<_AnimatedUserCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnim;
+  late Animation<Offset> _slideAnim;
+  late Animation<double> _scaleAnim;
+  bool _isHovered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    _fadeAnim = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0, 0.7, curve: Curves.easeOut),
+      ),
+    );
+
+    _slideAnim = Tween<Offset>(
+        begin: const Offset(0, 0.2), end: Offset.zero)
+        .animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0, 0.8, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    _scaleAnim = Tween<double>(begin: 0.92, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.1, 0.9, curve: Curves.easeOut),
+      ),
+    );
+
+    // Stagger the animation based on index
+    Future.delayed(Duration(milliseconds: widget.index * 100), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isManager = user.userType == UserType.manager;
+    final isManager = widget.user.userType == UserType.manager;
+    final accentColor = isManager ? AppColors.warmOrange : AppColors.ember;
 
-    return Card(
-      color: AppColors.surfaceDark,
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
-        side: BorderSide(color: AppColors.borderColor),
-      ),
-      child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isManager
-                ? AppColors.warmOrange.withOpacity(0.15)
-                : AppColors.charcoalLight,
-          ),
-          child: Center(
-            child: Text(
-              user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: isManager ? AppColors.warmOrange : AppColors.cream,
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (_, __) => FadeTransition(
+        opacity: _fadeAnim,
+        child: SlideTransition(
+          position: _slideAnim,
+          child: ScaleTransition(
+            scale: _scaleAnim,
+            child: MouseRegion(
+              onEnter: (_) => setState(() => _isHovered = true),
+              onExit: (_) => setState(() => _isHovered = false),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceDark,
+                  borderRadius:
+                      BorderRadius.circular(AppSpacing.cardRadius),
+                  border: Border.all(
+                    color: _isHovered
+                        ? accentColor.withOpacity(0.5)
+                        : AppColors.borderColor,
+                    width: _isHovered ? 1.5 : 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _isHovered
+                          ? accentColor.withOpacity(0.08)
+                          : Colors.black.withOpacity(0.05),
+                      blurRadius: _isHovered ? 16 : 4,
+                      offset: Offset(0, _isHovered ? 6 : 2),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(widget.columns > 3 ? AppSpacing.md : AppSpacing.lg),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Avatar
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: _isHovered ? 64 : 56,
+                        height: _isHovered ? 64 : 56,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: isManager
+                                ? [
+                                    AppColors.warmOrange
+                                        .withOpacity(0.25),
+                                    AppColors.ember
+                                        .withOpacity(0.15),
+                                  ]
+                                : [
+                                    AppColors.charcoalLight
+                                        .withOpacity(0.6),
+                                    AppColors.charcoalMedium,
+                                  ],
+                          ),
+                          border: Border.all(
+                            color: isManager
+                                ? AppColors.warmOrange
+                                    .withOpacity(0.5)
+                                : AppColors.borderColor,
+                            width: 2.5,
+                          ),
+                          boxShadow: [
+                            if (_isHovered)
+                              BoxShadow(
+                                color:
+                                    accentColor.withOpacity(0.2),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            widget.user.name.isNotEmpty
+                                ? widget.user.name[0]
+                                    .toUpperCase()
+                                : '?',
+                            style: TextStyle(
+                              fontSize: _isHovered ? 26 : 22,
+                              fontWeight: FontWeight.w900,
+                              color: isManager
+                                  ? AppColors.warmOrange
+                                  : AppColors.cream,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Name
+                      Text(
+                        widget.user.name,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.cream,
+                          letterSpacing: -0.3,
+                        ),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+
+                      // Username
+                      Text(
+                        '@${widget.user.username}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.mutedColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Role badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 6),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: isManager
+                                ? [
+                                    AppColors.warmOrange
+                                        .withOpacity(0.2),
+                                    AppColors.ember
+                                        .withOpacity(0.1),
+                                  ]
+                                : [
+                                    AppColors.charcoalLight
+                                        .withOpacity(0.4),
+                                    AppColors.charcoalLight
+                                        .withOpacity(0.2),
+                                  ],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isManager
+                                ? AppColors.warmOrange
+                                    .withOpacity(0.3)
+                                : AppColors.borderColor,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isManager
+                                  ? LucideIcons.shieldCheck
+                                  : LucideIcons.user,
+                              size: 14,
+                              color: isManager
+                                  ? AppColors.warmOrange
+                                  : AppColors.creamMuted,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              isManager ? 'مدير' : 'كاشير',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: isManager
+                                    ? AppColors.warmOrange
+                                    : AppColors.creamMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const Spacer(),
+
+                      // Actions
+                      Row(
+                        mainAxisAlignment:
+                            MainAxisAlignment.center,
+                        children: [
+                          _ActionButton(
+                            icon: LucideIcons.edit3,
+                            color: AppColors.ember,
+                            tooltip: 'تعديل',
+                            onTap: () {},
+                          ),
+                          const SizedBox(width: 8),
+                          _ActionButton(
+                            icon: LucideIcons.trash2,
+                            color: AppColors.grillRed,
+                            tooltip: 'حذف',
+                            onTap: () {
+                              getIt<UserCubit>()
+                                  .deleteUser(widget.user.username);
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
         ),
-        title: Text(user.name,
-            style: TextStyle(
-                color: AppColors.cream, fontWeight: FontWeight.w600)),
-        subtitle: Text(
-          '${user.username} • ${isManager ? "مدير" : "كاشير"}',
-          style: TextStyle(color: AppColors.creamMuted, fontSize: 13),
-        ),
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            color: isManager
-                ? AppColors.warmOrange.withOpacity(0.15)
-                : AppColors.charcoalLight.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            isManager ? 'مدير' : 'كاشير',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: isManager ? AppColors.warmOrange : AppColors.creamMuted,
+      ),
+    );
+  }
+}
+
+class _ActionButton extends StatefulWidget {
+  final IconData icon;
+  final Color color;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  const _ActionButton({
+    required this.icon,
+    required this.color,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  @override
+  State<_ActionButton> createState() => _ActionButtonState();
+}
+
+class _ActionButtonState extends State<_ActionButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: widget.tooltip,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: _isHovered
+                  ? widget.color.withOpacity(0.15)
+                  : AppColors.charcoalLight.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: _isHovered
+                    ? widget.color.withOpacity(0.3)
+                    : Colors.transparent,
+              ),
+            ),
+            child: Icon(
+              widget.icon,
+              size: 16,
+              color: _isHovered ? widget.color : AppColors.mutedColor,
             ),
           ),
         ),

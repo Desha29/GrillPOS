@@ -111,12 +111,13 @@ class CartItemWidget extends StatelessWidget {
                     isDanger: item.quantity <= 1,
                   ),
                   Container(
-                    width: 40,
+                    width: 60,
                     alignment: Alignment.center,
                     child: Text(
-                      '${item.quantity}',
+                      '${item.quantity % 1 == 0 ? item.quantity.toInt().toString() : item.quantity.toStringAsFixed(2)}${item.unit != null ? " ${item.unit}" : ""}',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w800,
                         color: AppColors.cream,
                       ),

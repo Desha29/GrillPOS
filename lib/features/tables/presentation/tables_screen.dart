@@ -176,8 +176,7 @@ class TablesScreen extends StatelessWidget {
                     ),
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon:
-                          Icon(Icons.close, color: AppColors.creamMuted),
+                      icon: Icon(Icons.close, color: AppColors.creamMuted),
                     ),
                   ],
                 ),
@@ -217,10 +216,10 @@ class TablesScreen extends StatelessWidget {
                       onPressed: () {
                         final name = nameCtrl.text.trim();
                         final cap = int.tryParse(capacityCtrl.text.trim()) ?? 4;
-                        if (name.isNotEmpty) {
-                          getIt<TablesCubit>().addTable(name, capacity: cap);
-                          Navigator.pop(context);
-                        }
+                        context.read<TablesCubit>().addTable(
+                            name.isEmpty ? null : name,
+                            capacity: cap);
+                        Navigator.pop(context);
                       },
                       icon: const Icon(Icons.check_circle_outline, size: 18),
                       label: const Text('حفظ الطاولة'),
@@ -296,7 +295,8 @@ class TablesScreen extends StatelessWidget {
               leading: Icon(Icons.edit_outlined, color: AppColors.cream),
               title: Text(
                 'تعديل الطاولة',
-                style: TextStyle(color: AppColors.cream, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: AppColors.cream, fontWeight: FontWeight.bold),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -304,8 +304,7 @@ class TablesScreen extends StatelessWidget {
               },
             ),
             ListTile(
-              leading:
-                  Icon(Icons.delete_outline, color: AppColors.grillRed),
+              leading: Icon(Icons.delete_outline, color: AppColors.grillRed),
               title: Text(
                 'حذف الطاولة',
                 style: TextStyle(
@@ -323,7 +322,8 @@ class TablesScreen extends StatelessWidget {
   }
 
   void _showEditTableDialog(BuildContext context, RestaurantTable table) {
-    final nameCtrl = TextEditingController(text: table.name ?? table.tableNumber.toString());
+    final nameCtrl =
+        TextEditingController(text: table.name ?? table.tableNumber.toString());
     final capacityCtrl = TextEditingController(text: table.capacity.toString());
 
     showDialog(
@@ -347,7 +347,10 @@ class TablesScreen extends StatelessWidget {
                   children: [
                     Text(
                       'تعديل الطاولة',
-                      style: TextStyle(color: AppColors.cream, fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: AppColors.cream,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold),
                     ),
                     IconButton(
                       onPressed: () => Navigator.pop(context),
@@ -361,7 +364,8 @@ class TablesScreen extends StatelessWidget {
                   style: TextStyle(color: AppColors.cream),
                   decoration: InputDecoration(
                     labelText: 'رقم أو اسم الطاولة',
-                    prefixIcon: Icon(Icons.numbers, color: AppColors.mutedColor),
+                    prefixIcon:
+                        Icon(Icons.numbers, color: AppColors.mutedColor),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -380,7 +384,8 @@ class TablesScreen extends StatelessWidget {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      style: TextButton.styleFrom(foregroundColor: AppColors.creamMuted),
+                      style: TextButton.styleFrom(
+                          foregroundColor: AppColors.creamMuted),
                       child: const Text('إلغاء'),
                     ),
                     const SizedBox(width: AppSpacing.sm),
@@ -388,20 +393,19 @@ class TablesScreen extends StatelessWidget {
                       onPressed: () {
                         final name = nameCtrl.text.trim();
                         final cap = int.tryParse(capacityCtrl.text.trim()) ?? 4;
-                        if (name.isNotEmpty) {
-                          getIt<TablesCubit>().updateTable(table.copyWith(
-                            name: name,
-                            capacity: cap,
-                          ));
-                          Navigator.pop(context);
-                        }
+                        context.read<TablesCubit>().updateTable(table.copyWith(
+                              name: name.isEmpty ? null : name,
+                              capacity: cap,
+                            ));
+                        Navigator.pop(context);
                       },
                       icon: const Icon(Icons.save, size: 18),
                       label: const Text('حفظ التعديلات'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.warmOrange,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 12),
                       ),
                     ),
                   ],
@@ -419,15 +423,13 @@ class TablesScreen extends StatelessWidget {
       context: context,
       builder: (dialogCtx) => AlertDialog(
         backgroundColor: AppColors.charcoalMedium,
-        title:
-            Text('حذف الطاولة', style: TextStyle(color: AppColors.cream)),
+        title: Text('حذف الطاولة', style: TextStyle(color: AppColors.cream)),
         content: Text('هل أنت متأكد من حذف ${table.displayName}؟',
             style: TextStyle(color: AppColors.creamMuted)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: Text('إلغاء',
-                style: TextStyle(color: AppColors.mutedColor)),
+            child: Text('إلغاء', style: TextStyle(color: AppColors.mutedColor)),
           ),
           ElevatedButton(
             onPressed: () {

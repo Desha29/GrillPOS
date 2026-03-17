@@ -9,13 +9,13 @@ import '../../../tables/presentation/cubit/tables_cubit.dart';
 
 class PosCartItem {
   final MenuItem item;
-  final int quantity;
+  final double quantity;
 
   const PosCartItem({required this.item, required this.quantity});
 
   double get lineTotal => item.price * quantity;
 
-  PosCartItem copyWith({int? quantity}) {
+  PosCartItem copyWith({double? quantity}) {
     return PosCartItem(item: item, quantity: quantity ?? this.quantity);
   }
 }
@@ -58,13 +58,16 @@ class POSState {
     List<PosCartItem>? cart,
     double? taxRate,
     bool clearError = false,
+    bool clearSelectedCategory = false,
   }) {
     return POSState(
       loading: loading ?? this.loading,
       error: clearError ? null : (error ?? this.error),
       categories: categories ?? this.categories,
       visibleItems: visibleItems ?? this.visibleItems,
-      selectedCategoryId: selectedCategoryId ?? this.selectedCategoryId,
+      selectedCategoryId: clearSelectedCategory
+          ? null
+          : (selectedCategoryId ?? this.selectedCategoryId),
       orderType: orderType ?? this.orderType,
       selectedTableId: selectedTableId ?? this.selectedTableId,
       cart: cart ?? this.cart,
@@ -79,17 +82,20 @@ class POSCubit extends Cubit<POSState> {
 
   POSCubit(this._menuRepo, this._ordersRepo) : super(const POSState());
 
-  Future<void> loadMenu({String? categoryId}) async {
+  Future<void> loadMenu(
+      {String? categoryId, bool clearCategory = false}) async {
     emit(state.copyWith(loading: true, clearError: true));
     try {
       final categories = await _menuRepo.getCategories();
-      final selected = categoryId ?? state.selectedCategoryId;
+      final selected =
+          clearCategory ? null : (categoryId ?? state.selectedCategoryId);
       final items = await _menuRepo.getAvailableItems(categoryId: selected);
       emit(state.copyWith(
         loading: false,
         categories: categories,
         selectedCategoryId: selected,
         visibleItems: items,
+        clearSelectedCategory: clearCategory,
       ));
     } catch (e) {
       emit(state.copyWith(loading: false, error: e.toString()));
@@ -97,7 +103,7 @@ class POSCubit extends Cubit<POSState> {
   }
 
   Future<void> selectCategory(String? categoryId) async {
-    await loadMenu(categoryId: categoryId);
+    await loadMenu(categoryId: categoryId, clearCategory: categoryId == null);
   }
 
   void setOrderType(OrderType type) {
@@ -112,16 +118,29 @@ class POSCubit extends Cubit<POSState> {
     emit(state.copyWith(taxRate: rate));
   }
 
-  void addToCart(MenuItem item) {
+  void addToCart(MenuItem item, {double quantity = 1.0}) {
     final idx = state.cart.indexWhere((c) => c.item.id == item.id);
     if (idx == -1) {
       emit(state.copyWith(
-          cart: [...state.cart, PosCartItem(item: item, quantity: 1)]));
+          cart: [...state.cart, PosCartItem(item: item, quantity: quantity)]));
       return;
     }
 
     final updated = [...state.cart];
-    updated[idx] = updated[idx].copyWith(quantity: updated[idx].quantity + 1);
+    updated[idx] = updated[idx].copyWith(quantity: updated[idx].quantity + quantity);
+    emit(state.copyWith(cart: updated));
+  }
+
+  void updateQuantity(String menuItemId, double quantity) {
+    if (quantity <= 0) {
+      removeFromCart(menuItemId);
+      return;
+    }
+    final idx = state.cart.indexWhere((c) => c.item.id == menuItemId);
+    if (idx == -1) return;
+
+    final updated = [...state.cart];
+    updated[idx] = updated[idx].copyWith(quantity: quantity);
     emit(state.copyWith(cart: updated));
   }
 
@@ -161,6 +180,7 @@ class POSCubit extends Cubit<POSState> {
         cashierId: cashierId,
         waiterId: waiterId,
         notes: notes,
+        taxRate: state.taxRate,
       );
 
       for (final c in state.cart) {
@@ -168,21 +188,25 @@ class POSCubit extends Cubit<POSState> {
           orderId: order.id,
           menuItemId: c.item.id,
           itemName: c.item.displayName,
+          unit: c.item.unit,
           quantity: c.quantity,
           unitPrice: c.item.price,
+          taxRate: state.taxRate,
         );
       }
 
-      if (state.selectedTableId != null && state.orderType == OrderType.dineIn) {
+      if (state.selectedTableId != null &&
+          state.orderType == OrderType.dineIn) {
         try {
-          await getIt<TablesRepository>().assignOrder(state.selectedTableId!, order.id);
+          await getIt<TablesRepository>()
+              .assignOrder(state.selectedTableId!, order.id);
           getIt<TablesCubit>().loadTables();
         } catch (_) {}
       }
 
       // Fetch the complete order with items for the invoice
       final completeOrder = await _ordersRepo.getOrderById(order.id);
-      
+
       emit(state.copyWith(loading: false, cart: []));
       return completeOrder ?? order;
     } catch (e) {

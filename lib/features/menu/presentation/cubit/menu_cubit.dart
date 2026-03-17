@@ -24,13 +24,16 @@ class MenuState {
     List<MenuItem>? items,
     String? selectedCategoryId,
     bool clearError = false,
+    bool clearSelectedCategory = false,
   }) {
     return MenuState(
       loading: loading ?? this.loading,
       error: clearError ? null : (error ?? this.error),
       categories: categories ?? this.categories,
       items: items ?? this.items,
-      selectedCategoryId: selectedCategoryId ?? this.selectedCategoryId,
+      selectedCategoryId: clearSelectedCategory
+          ? null
+          : (selectedCategoryId ?? this.selectedCategoryId),
     );
   }
 }
@@ -40,17 +43,23 @@ class MenuCubit extends Cubit<MenuState> {
 
   MenuCubit(this._repo) : super(const MenuState());
 
-  Future<void> loadMenu({String? categoryId}) async {
+  Future<void> loadMenu(
+      {String? categoryId, bool clearCategory = false}) async {
     emit(state.copyWith(loading: true, clearError: true));
     try {
+      // Auto-seed default data if empty
+      await _repo.seedDefaultData();
+
       final categories = await _repo.getCategories();
-      final selected = categoryId ?? state.selectedCategoryId;
+      final selected =
+          clearCategory ? null : (categoryId ?? state.selectedCategoryId);
       final items = await _repo.getMenuItems(categoryId: selected);
       emit(state.copyWith(
         loading: false,
         categories: categories,
         items: items,
         selectedCategoryId: selected,
+        clearSelectedCategory: clearCategory,
       ));
     } catch (e) {
       emit(state.copyWith(loading: false, error: e.toString()));
@@ -58,8 +67,7 @@ class MenuCubit extends Cubit<MenuState> {
   }
 
   Future<void> selectCategory(String? categoryId) async {
-    emit(state.copyWith(selectedCategoryId: categoryId));
-    await loadMenu(categoryId: categoryId);
+    await loadMenu(categoryId: categoryId, clearCategory: categoryId == null);
   }
 
   Future<void> addCategory(String name, {String? nameAr}) async {
@@ -78,6 +86,7 @@ class MenuCubit extends Cubit<MenuState> {
     required double price,
     String? imageUrl,
     String? description,
+    String? unit,
   }) async {
     try {
       await _repo.createItem(
@@ -87,6 +96,7 @@ class MenuCubit extends Cubit<MenuState> {
         price: price,
         imageUrl: imageUrl,
         description: description,
+        unit: unit,
       );
       await loadMenu(categoryId: state.selectedCategoryId);
     } catch (e) {
@@ -102,4 +112,41 @@ class MenuCubit extends Cubit<MenuState> {
       emit(state.copyWith(error: e.toString()));
     }
   }
+
+  Future<void> updateCategory(MenuCategory cat) async {
+    try {
+      await _repo.updateCategory(cat);
+      await loadMenu(categoryId: state.selectedCategoryId);
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  Future<void> deleteCategory(String id) async {
+    try {
+      await _repo.deleteCategory(id);
+      await loadMenu(categoryId: state.selectedCategoryId == id ? null : state.selectedCategoryId, clearCategory: state.selectedCategoryId == id);
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  Future<void> updateItem(MenuItem item) async {
+    try {
+      await _repo.updateItem(item);
+      await loadMenu(categoryId: state.selectedCategoryId);
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  Future<void> deleteItem(String id) async {
+    try {
+      await _repo.deleteItem(id);
+      await loadMenu(categoryId: state.selectedCategoryId);
+    } catch (e) {
+      emit(state.copyWith(error: e.toString()));
+    }
+  }
 }
+

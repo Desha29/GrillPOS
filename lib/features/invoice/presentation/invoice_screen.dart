@@ -61,16 +61,28 @@ class InvoiceScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          if (restaurantLogo != null && restaurantLogo!.isNotEmpty && File(restaurantLogo!).existsSync())
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: Image.file(
-                                File(restaurantLogo!),
-                                height: 64,
-                                width: 64,
-                                fit: BoxFit.contain,
-                              ),
-                            ),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: restaurantLogo != null &&
+                                    restaurantLogo!.isNotEmpty
+                                ? Image.file(
+                                    File(restaurantLogo!),
+                                    key: ValueKey(File(restaurantLogo!)
+                                        .lastModifiedSync()
+                                        .millisecondsSinceEpoch),
+                                    height: 64,
+                                    width: 64,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (_, __, ___) => Image.asset(
+                                        'assets/images/grillpos/logo_icon.png',
+                                        height: 64,
+                                        width: 64),
+                                  )
+                                : Image.asset(
+                                    'assets/images/grillpos/logo_icon.png',
+                                    height: 64,
+                                    width: 64),
+                          ),
                           // Restaurant Name
                           Text(
                             restaurantName,

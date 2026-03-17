@@ -83,7 +83,8 @@ class _LogoState extends State<Logo> with SingleTickerProviderStateMixin {
           bloc: getIt<SettingsCubit>(),
           builder: (context, state) {
              final store = getIt<SettingsCubit>().currentStoreInfo;
-             final name = store?.name.isNotEmpty == true ? store!.name : 'GrillPOS';
+             String name = store?.name.isNotEmpty == true ? store!.name : 'GrillPOS';
+             if (name.endsWith(' Store')) name = name.replaceAll(' Store', '');
              final slogan  = 'نظام نقاط البيع للمطاعم';
              
              return Column(

@@ -45,12 +45,16 @@ class DashboardStatCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: AppColors.creamMuted,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: AppColors.creamMuted,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               Container(
@@ -62,46 +66,50 @@ class DashboardStatCard extends StatelessWidget {
                 child: Icon(
                   icon,
                   color: color,
-                  size: 24,
+                  size: 20,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            value,
-            style: TextStyle(
-              color: AppColors.cream,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: TextStyle(
+                color: AppColors.cream,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(
-                isPositiveTrend ? Icons.trending_up : Icons.trending_down,
-                color: isPositiveTrend ? AppColors.successColor : AppColors.errorColor,
-                size: 16,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                trend,
-                style: TextStyle(
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              children: [
+                Icon(
+                  isPositiveTrend ? Icons.trending_up : Icons.trending_down,
                   color: isPositiveTrend ? AppColors.successColor : AppColors.errorColor,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                  size: 14,
                 ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'مقارنة بالأمس',
-                style: TextStyle(
-                  color: AppColors.mutedColor,
-                  fontSize: 13,
+                const SizedBox(width: 4),
+                Text(
+                  trend,
+                  style: TextStyle(
+                    color: isPositiveTrend ? AppColors.successColor : AppColors.errorColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 4),
+                Text(
+                  'مقارنة بالأمس',
+                  style: TextStyle(
+                    color: AppColors.mutedColor,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

@@ -13,10 +13,10 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/components/logo.dart';
 import '../../../core/data/services/persistence_initializer.dart';
-import '../../../core/session/session_manager.dart';
 
 import '../../dashboard/presentation/dashboard_screen.dart';
 
+import '../../settings/presentation/cubit/settings_cubit.dart';
 import 'cubit/user_cubit.dart';
 import 'cubit/user_states.dart';
 
@@ -43,11 +43,9 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         if (success && mounted) {
           getIt<UserCubit>().getAllUsers();
-          await getIt<SessionManager>().loadSession();
           setState(() {});
         }
       } else {
-        await getIt<SessionManager>().loadSession();
         if (mounted) setState(() {});
       }
     });
@@ -121,46 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 32),
                     const Logo(isMobile: false, avatarRadius: 90),
                     const SizedBox(height: 24),
-                    Builder(
-                      builder: (context) {
-                        final session =
-                            getIt<SessionManager>().currentSession;
-                        if (session != null && session.isOpen) {
-                          return Container(
-                            margin: const EdgeInsets.only(
-                                bottom: 24, left: 24, right: 24),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: AppColors.warmOrange.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                  color: AppColors.warmOrange.withOpacity(0.3)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(LucideIcons.info,
-                                    color: AppColors.warmOrange, size: 20),
-                                const SizedBox(width: 10),
-                                Flexible(
-                                  child: Text(
-                                    'يوجد يومية مفتوحة حالياً. تسجيل الدخول سيتابع عليها.',
-                                    style: TextStyle(
-                                      color: AppColors.warmOrange,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    ),
+
                     Text(
                       'اختر المستخدم لتسجيل الدخول',
                       style:
@@ -197,7 +156,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               itemCount: state.users.length,
                               itemBuilder: (context, index) {
                                 final user = state.users[index];
-                                return _buildUserCard(context, user);
+                                return _LoginUserCard(
+                                  user: user,
+                                  index: index,
+                                  onTap: () => _showPasswordDialog(context, user),
+                                );
                               },
                             );
                           } else if (state is UserFailure) {
@@ -235,88 +198,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildUserCard(BuildContext context, User user) {
-    final isManager = user.userType == UserType.manager;
-
-    return Card(
-      elevation: 0,
-      color: AppColors.surfaceDark,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
-        side: BorderSide(color: AppColors.borderColor, width: 1),
-      ),
-      child: InkWell(
-        onTap: () => _showPasswordDialog(context, user),
-        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
-        hoverColor: AppColors.charcoalLight.withOpacity(0.5),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: isManager
-                      ? [AppColors.warmOrange.withOpacity(0.2), AppColors.ember.withOpacity(0.1)]
-                      : [AppColors.charcoalLight.withOpacity(0.5), AppColors.charcoalMedium],
-                ),
-                border: Border.all(
-                  color: isManager
-                      ? AppColors.warmOrange.withOpacity(0.4)
-                      : AppColors.borderColor,
-                  width: 2,
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  user.name.isNotEmpty ? user.name[0].toUpperCase() : "?",
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: isManager ? AppColors.warmOrange : AppColors.cream,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              user.name,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.cream,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: isManager
-                    ? AppColors.warmOrange.withOpacity(0.15)
-                    : AppColors.charcoalLight.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                isManager ? "مدير" : "كاشير",
-                style: TextStyle(
-                  color: isManager ? AppColors.warmOrange : AppColors.creamMuted,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -575,5 +456,214 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
     getIt<UserCubit>().login(username, password);
+  }
+}
+
+// ─── Animated Login User Card ──────────────────────────────────────────────
+class _LoginUserCard extends StatefulWidget {
+  final User user;
+  final int index;
+  final VoidCallback onTap;
+
+  const _LoginUserCard({
+    required this.user,
+    required this.index,
+    required this.onTap,
+  });
+
+  @override
+  State<_LoginUserCard> createState() => _LoginUserCardState();
+}
+
+class _LoginUserCardState extends State<_LoginUserCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnim;
+  late Animation<Offset> _slideAnim;
+  bool _isHovered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+
+    _fadeAnim = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+
+    _slideAnim =
+        Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+
+    Future.delayed(Duration(milliseconds: widget.index * 120), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isManager = widget.user.userType == UserType.manager;
+    final accentColor = isManager ? AppColors.warmOrange : AppColors.ember;
+
+    return FadeTransition(
+      opacity: _fadeAnim,
+      child: SlideTransition(
+        position: _slideAnim,
+        child: MouseRegion(
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() => _isHovered = false),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceDark,
+              borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+              border: Border.all(
+                color: _isHovered
+                    ? accentColor.withOpacity(0.5)
+                    : AppColors.borderColor,
+                width: _isHovered ? 1.5 : 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _isHovered
+                      ? accentColor.withOpacity(0.1)
+                      : Colors.black.withOpacity(0.05),
+                  blurRadius: _isHovered ? 16 : 4,
+                  offset: Offset(0, _isHovered ? 6 : 2),
+                ),
+              ],
+            ),
+            child: InkWell(
+              onTap: widget.onTap,
+              borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+              hoverColor: Colors.transparent,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: _isHovered ? 64 : 56,
+                    height: _isHovered ? 64 : 56,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: isManager
+                            ? [
+                                AppColors.warmOrange.withOpacity(0.25),
+                                AppColors.ember.withOpacity(0.15),
+                              ]
+                            : [
+                                AppColors.charcoalLight.withOpacity(0.5),
+                                AppColors.charcoalMedium,
+                              ],
+                      ),
+                      border: Border.all(
+                        color: isManager
+                            ? AppColors.warmOrange.withOpacity(0.5)
+                            : AppColors.borderColor,
+                        width: 2.5,
+                      ),
+                      boxShadow: [
+                        if (_isHovered)
+                          BoxShadow(
+                            color: accentColor.withOpacity(0.2),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        widget.user.name.isNotEmpty
+                            ? widget.user.name[0].toUpperCase()
+                            : "?",
+                        style: TextStyle(
+                          fontSize: _isHovered ? 26 : 22,
+                          fontWeight: FontWeight.w900,
+                          color: isManager
+                              ? AppColors.warmOrange
+                              : AppColors.cream,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    widget.user.name,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.cream,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 5),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isManager
+                            ? [
+                                AppColors.warmOrange.withOpacity(0.2),
+                                AppColors.ember.withOpacity(0.1),
+                              ]
+                            : [
+                                AppColors.charcoalLight.withOpacity(0.4),
+                                AppColors.charcoalLight.withOpacity(0.2),
+                              ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isManager
+                            ? AppColors.warmOrange.withOpacity(0.3)
+                            : AppColors.borderColor,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isManager
+                              ? LucideIcons.shieldCheck
+                              : LucideIcons.user,
+                          size: 12,
+                          color: isManager
+                              ? AppColors.warmOrange
+                              : AppColors.creamMuted,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          isManager ? "مدير" : "كاشير",
+                          style: TextStyle(
+                            color: isManager
+                                ? AppColors.warmOrange
+                                : AppColors.creamMuted,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

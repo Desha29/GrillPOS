@@ -56,7 +56,7 @@ class StoreInfoCard extends StatelessWidget {
               Row(
                 children: [
                   Icon(
-                    LucideIcons.store,
+                    LucideIcons.chefHat,
                     size: 18,
                     color: AppColors.mutedColor,
                   ),
@@ -128,7 +128,7 @@ class StoreInfoCard extends StatelessWidget {
                             runSpacing: 12,
                             children: [
                               _StoreInfoRow(
-                                  icon: LucideIcons.store,
+                                  icon: LucideIcons.chefHat,
                                   label: 'اسم المطعم',
                                   value: store!.name,
                                   theme: theme),
@@ -162,7 +162,7 @@ class StoreInfoCard extends StatelessWidget {
                           Column(
                             children: [
                               _StoreInfoRow(
-                                  icon: LucideIcons.store,
+                                  icon: LucideIcons.chefHat,
                                   label: 'اسم المطعم',
                                   value: store!.name,
                                   theme: theme),
@@ -200,7 +200,7 @@ class StoreInfoCard extends StatelessWidget {
                 const Center(
                   child: Padding(
                     padding: EdgeInsets.all(24.0),
-                    child: Text('لا توجد معلومات متجر'),
+                    child: Text('لا توجد معلومات للمطعم'),
                   ),
                 ),
             ],

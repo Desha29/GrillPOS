@@ -60,11 +60,20 @@ class TablesCubit extends Cubit<TablesState> {
     }
   }
 
-  Future<void> addTable(String name, {int capacity = 4, String section = 'main'}) async {
+  Future<void> addTable(String? name,
+      {int capacity = 4, String section = 'main'}) async {
     try {
       final tables = await _repo.getTables();
-      final maxNum = tables.isEmpty ? 0 : tables.map((t) => t.tableNumber).reduce((a, b) => a > b ? a : b);
-      await _repo.createTable(tableNumber: maxNum + 1, name: name, capacity: capacity, section: section);
+      final maxNum = tables.isEmpty
+          ? 0
+          : tables.map((t) => t.tableNumber).reduce((a, b) => a > b ? a : b);
+      final finalName =
+          (name != null && name.trim().isNotEmpty) ? name.trim() : null;
+      await _repo.createTable(
+          tableNumber: maxNum + 1,
+          name: finalName,
+          capacity: capacity,
+          section: section);
       await loadTables();
     } catch (e) {
       emit(state.copyWith(error: e.toString()));
