@@ -3,58 +3,55 @@ import '../constants/app_colors.dart';
 import '../constants/app_spacing.dart';
 
 
-enum _POSButtonType { primary, danger, success, ghost }
-
 class POSButton extends StatefulWidget {
   final String label;
   final VoidCallback onPressed;
   final IconData? icon;
-  final Color? backgroundColor;
-  final Color? foregroundColor;
+  final Color backgroundColor;
+  final Color foregroundColor;
   final bool isGhost;
   final bool isExpanded;
   final double? width;
   final double? height;
-  final _POSButtonType _type;
 
-  const POSButton({
+  POSButton({
     super.key,
     required this.label,
     required this.onPressed,
     this.icon,
-    this.backgroundColor,
-    this.foregroundColor,
+    this.backgroundColor = AppColors.warmOrange,
+    this.foregroundColor = Colors.white,
     this.isGhost = false,
     this.isExpanded = false,
     this.width,
     this.height = AppSpacing.posButtonSize,
-  }) : _type = _POSButtonType.primary;
+  });
 
   POSButton.danger({
     super.key,
     required this.label,
     required this.onPressed,
     this.icon,
-    this.backgroundColor,
-    this.foregroundColor,
+    this.backgroundColor = AppColors.grillRed,
+    this.foregroundColor = Colors.white,
     this.isGhost = false,
     this.isExpanded = false,
     this.width,
     this.height = AppSpacing.posButtonSize,
-  }) : _type = _POSButtonType.danger;
+  });
 
   POSButton.success({
     super.key,
     required this.label,
     required this.onPressed,
     this.icon,
-    this.backgroundColor,
-    this.foregroundColor,
+    this.backgroundColor = AppColors.successGreen,
+    this.foregroundColor = Colors.white,
     this.isGhost = false,
     this.isExpanded = false,
     this.width,
     this.height = AppSpacing.posButtonSize,
-  }) : _type = _POSButtonType.success;
+  });
 
   const POSButton.ghost({
     super.key,
@@ -62,12 +59,12 @@ class POSButton extends StatefulWidget {
     required this.onPressed,
     this.icon,
     this.backgroundColor = Colors.transparent,
-    this.foregroundColor,     // Default will be handled in build
+    this.foregroundColor = AppColors.warmOrange,
     this.isGhost = true,
     this.isExpanded = false,
     this.width,
     this.height = AppSpacing.posButtonSize,
-  }) : _type = _POSButtonType.ghost;
+  });
 
   @override
   State<POSButton> createState() => _POSButtonState();
@@ -102,29 +99,6 @@ class _POSButtonState extends State<POSButton> with SingleTickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-    // Resolve effective colors
-    Color effectiveBg;
-    Color effectiveFg;
-
-    switch (widget._type) {
-      case _POSButtonType.danger:
-        effectiveBg = widget.backgroundColor ?? AppColors.grillRed;
-        effectiveFg = widget.foregroundColor ?? Colors.white;
-        break;
-      case _POSButtonType.success:
-        effectiveBg = widget.backgroundColor ?? AppColors.successGreen;
-        effectiveFg = widget.foregroundColor ?? Colors.white;
-        break;
-      case _POSButtonType.ghost:
-        effectiveBg = widget.backgroundColor ?? Colors.transparent;
-        effectiveFg = widget.foregroundColor ?? AppColors.warmOrange;
-        break;
-      case _POSButtonType.primary:
-      effectiveBg = widget.backgroundColor ?? AppColors.warmOrange;
-        effectiveFg = widget.foregroundColor ?? Colors.white;
-        break;
-    }
-
     Widget buttonContent = MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -142,17 +116,17 @@ class _POSButtonState extends State<POSButton> with SingleTickerProviderStateMix
             padding: const EdgeInsets.symmetric(horizontal: 24),
             decoration: BoxDecoration(
               color: widget.isGhost
-                  ? (_isHovered ? effectiveFg.withOpacity(0.1) : effectiveBg)
+                  ? (_isHovered ? widget.foregroundColor.withOpacity(0.1) : widget.backgroundColor)
                   : (_isHovered
-                      ? Color.lerp(effectiveBg, Colors.white, 0.1)
-                      : effectiveBg),
+                      ? Color.lerp(widget.backgroundColor, Colors.white, 0.1)
+                      : widget.backgroundColor),
               borderRadius: BorderRadius.circular(AppSpacing.buttonRadius),
-              border: widget.isGhost ? Border.all(color: effectiveFg, width: 2) : null,
+              border: widget.isGhost ? Border.all(color: widget.foregroundColor, width: 2) : null,
               boxShadow: widget.isGhost
                   ? []
                   : [
                       BoxShadow(
-                        color: effectiveBg.withOpacity(_isHovered ? 0.4 : 0.2),
+                        color: widget.backgroundColor.withOpacity(_isHovered ? 0.4 : 0.2),
                         blurRadius: _isHovered ? 12 : 6,
                         offset: Offset(0, _isHovered ? 4 : 2),
                       )
@@ -163,13 +137,13 @@ class _POSButtonState extends State<POSButton> with SingleTickerProviderStateMix
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (widget.icon != null) ...[
-                  Icon(widget.icon, color: effectiveFg, size: 22),
+                  Icon(widget.icon, color: widget.foregroundColor, size: 22),
                   const SizedBox(width: 8),
                 ],
                 Text(
                   widget.label,
                   style: TextStyle(
-                    color: effectiveFg,
+                    color: widget.foregroundColor,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),

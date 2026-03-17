@@ -12,6 +12,7 @@ import '../../auth/presentation/cubit/user_cubit.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../../settings/presentation/cubit/settings_cubit.dart';
 import '../../settings/presentation/cubit/settings_states.dart';
+import '../../../core/theme/theme_cubit.dart';
 
 import 'widgets/dashboard_home.dart';
 import 'widgets/side_bar.dart';
@@ -34,13 +35,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool isSidebarCollapsed = false;
 
   late final User curUser = getIt<UserCubit>().currentUser;
-  late final List<SidebarItem> sidebarItems;
-
   @override
   void initState() {
     super.initState();
+  }
 
-    final allSidebarItems = [
+  List<SidebarItem> _getSidebarItems(BuildContext context) {
+    return [
       SidebarItem(
         id: 'dashboard',
         icon: LucideIcons.layoutDashboard,
@@ -95,18 +96,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
         screen: const SettingsScreen(),
       ),
     ];
-
-    sidebarItems = allSidebarItems;
   }
 
   @override
   Widget build(BuildContext context) {
+    final sidebarItems = _getSidebarItems(context);
     final isMobileOrTablet = MediaQuery.of(context).size.width < 1000;
 
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
-        appBar: isMobileOrTablet
+      child: BlocBuilder<ThemeCubit, ThemeState>(
+        builder: (context, themeState) {
+          return Scaffold(
+            key: ValueKey(themeState.isDarkMode),
+            appBar: isMobileOrTablet
             ? AppBar(
                 backgroundColor: AppColors.charcoalMedium,
                 title: BlocBuilder<SettingsCubit, SettingsStates>(
@@ -157,12 +160,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
           ],
-        ),
+            ),
+          );
+        },
       ),
     );
   }
 
   void _onSidebarSelected(BuildContext context, int index) {
+    final sidebarItems = _getSidebarItems(context);
     final item = sidebarItems[index];
     if (item.id == 'reports') {
       try {
@@ -184,6 +190,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   /// Handles tap on a card in the dashboard screen.
   void handleCardTap(String id) {
+    final sidebarItems = _getSidebarItems(context);
     final index = sidebarItems.indexWhere((item) => item.id == id);
     if (index != -1) {
       _onSidebarSelected(context, index);

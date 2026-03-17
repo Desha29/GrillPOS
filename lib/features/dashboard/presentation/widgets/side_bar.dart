@@ -7,6 +7,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/components/app_logo.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/dependency_injection.dart';
+import '../../../../core/theme/theme_cubit.dart';
 import '../../../auth/presentation/cubit/user_cubit.dart';
 import '../../../auth/presentation/cubit/user_states.dart';
 import '../../../settings/presentation/cubit/settings_cubit.dart';
@@ -104,9 +105,7 @@ class _CustomSidebarState extends State<CustomSidebar>
               ),
               const SizedBox(height: 8),
 
-              // Current user card
-              if (!compact) _buildUserCard(),
-              if (!compact) const SizedBox(height: 8),
+              // Current user card moved to bottom
 
               // Collapse toggle
               if (widget.onToggleCollapse != null)
@@ -132,69 +131,54 @@ class _CustomSidebarState extends State<CustomSidebar>
                   itemBuilder: (context, index) {
                     final item = widget.items[index];
                     final isSelected = index == widget.selectedIndex;
-                    final isHovered = index == _hoveredIndex;
-
-                    final bgColor = isSelected
-                        ? AppColors.warmOrange.withOpacity(0.15)
-                        : isHovered
-                            ? AppColors.charcoalLight.withOpacity(0.4)
-                            : Colors.transparent;
-
-                    final fgIcon = isSelected
-                        ? AppColors.warmOrange
-                        : AppColors.mutedColor;
-
-                    final titleStyle = TextStyle(
-                      fontSize: 14,
-                      color: isSelected
-                          ? AppColors.warmOrange
-                          : AppColors.creamMuted,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.w500,
-                    );
-
-                    return MouseRegion(
-                      onEnter: (_) => setState(() => _hoveredIndex = index),
-                      onExit: (_) => setState(() => _hoveredIndex = -1),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 160),
-                        curve: Curves.easeInOut,
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: bgColor,
-                          borderRadius: BorderRadius.circular(10),
-                          border: isSelected
-                              ? Border.all(color: AppColors.warmOrange.withOpacity(0.2))
-                              : null,
-                        ),
-                        child: ListTile(
-                          dense: true,
-                          horizontalTitleGap: 10,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 0,
-                          ),
-                          leading: Icon(item.icon, size: 20, color: fgIcon),
-                          title: w > 100
-                              ? FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  alignment: Alignment.centerRight,
-                                  child: Text(
-                                    item.title,
-                                    style: titleStyle,
-                                  ),
-                                )
-                              : null,
-                          onTap: () => widget.onItemSelected(index),
-                        ),
-                      ),
+                    return _SidebarNavItem(
+                      item: item,
+                      isSelected: isSelected,
+                      compact: compact,
+                      w: w,
+                      onTap: () => widget.onItemSelected(index),
                     );
                   },
                 ),
               ),
+
+              // Theme toggle
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                child: BlocBuilder<ThemeCubit, ThemeState>(
+                  builder: (context, themeState) {
+                    return ListTile(
+                      dense: true,
+                      leading: Icon(
+                        themeState.isDarkMode ? LucideIcons.sun : LucideIcons.moon,
+                        color: AppColors.ember,
+                        size: 20,
+                      ),
+                      title: w > 100
+                          ? FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerRight,
+                              child: Text(
+                                themeState.isDarkMode ? 'الوضع الفاتح' : 'الوضع الداكن',
+                                style: TextStyle(
+                                  color: AppColors.creamMuted,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            )
+                          : null,
+                      onTap: () => context.read<ThemeCubit>().toggleTheme(),
+                    );
+                  },
+                ),
+              ),
+
+              if (!compact) ...[
+                const SizedBox(height: 8),
+                _buildUserCard(),
+                const SizedBox(height: 8),
+              ],
 
               // Logout
               Divider(
@@ -312,61 +296,124 @@ class _CustomSidebarState extends State<CustomSidebar>
 }
 
 class _SidebarHeader extends StatelessWidget {
-  const _SidebarHeader({required this.compact, required this.maxW});
-
   final bool compact;
   final double maxW;
+  const _SidebarHeader({required this.compact, required this.maxW});
 
   @override
   Widget build(BuildContext context) {
-    final radius = compact ? 18.0 : 28.0;
+    if (compact) {
+      return const AppLogo(width: 40, height: 40);
+    }
+    return SizedBox(
+      width: maxW,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const AppLogo(width: 44, height: 44),
+          const SizedBox(width: 12),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: DefaultTextStyle(
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.warmOrange,
+                  letterSpacing: 1.2,
+                ),
+                child: const Text('GrillPOS'),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Flexible(
-          child: FittedBox(
-            child: SizedBox(
-              height: radius * 2.5,
-              width: radius * 2.5,
-              child: ClipOval(
-                child: AppLogo(width: 140, height: 140, fit: BoxFit.cover),
+class _SidebarNavItem extends StatefulWidget {
+  final SidebarItem item;
+  final bool isSelected;
+  final bool compact;
+  final double w;
+  final VoidCallback onTap;
+
+  const _SidebarNavItem({
+    super.key,
+    required this.item,
+    required this.isSelected,
+    required this.compact,
+    required this.w,
+    required this.onTap,
+  });
+
+  @override
+  State<_SidebarNavItem> createState() => _SidebarNavItemState();
+}
+
+class _SidebarNavItemState extends State<_SidebarNavItem> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final bgColor = widget.isSelected
+        ? AppColors.warmOrange.withOpacity(0.15)
+        : _isHovered
+            ? AppColors.charcoalLight.withOpacity(0.4)
+            : Colors.transparent;
+
+    final fgIcon = widget.isSelected ? AppColors.warmOrange : AppColors.mutedColor;
+
+    final titleStyle = TextStyle(
+      fontSize: 14,
+      color: widget.isSelected ? AppColors.warmOrange : AppColors.creamMuted,
+      fontWeight: widget.isSelected ? FontWeight.bold : FontWeight.w500,
+    );
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeInOut,
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(10),
+          border: widget.isSelected ? Border.all(color: AppColors.warmOrange.withOpacity(0.2)) : null,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onTap,
+            borderRadius: BorderRadius.circular(10),
+            hoverColor: Colors.transparent, // Let AnimatedContainer handle color
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(widget.item.icon, size: 20, color: fgIcon),
+                  if (widget.w > 100) ...[
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          widget.item.title,
+                          style: titleStyle,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ),
         ),
-        if (!compact) ...[
-          const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: BlocBuilder<SettingsCubit, SettingsStates>(
-                      bloc: getIt<SettingsCubit>(),
-                      builder: (context, state) {
-                        final name =
-                            getIt<SettingsCubit>().currentStoreInfo?.name ??
-                                'GrillPOS';
-                        return Text(
-                          name.isNotEmpty ? name : 'GrillPOS',
-                          style:
-                              Theme.of(context).textTheme.labelLarge?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.cream,
-                                    fontSize: 15,
-                                    height: 1.2,
-                                  ),
-                        );
-                      }),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ],
+      ),
     );
   }
 }

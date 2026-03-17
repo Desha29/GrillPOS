@@ -96,7 +96,7 @@ class _MenuManagementView extends StatelessWidget {
               child: BlocBuilder<MenuCubit, MenuState>(
                 builder: (context, state) {
                   if (state.loading && state.categories.isEmpty && state.items.isEmpty) {
-                    return Center(child: CircularProgressIndicator(color: AppColors.warmOrange));
+                    return const Center(child: CircularProgressIndicator(color: AppColors.warmOrange));
                   }
 
                   if (state.items.isEmpty) {
@@ -134,7 +134,7 @@ class _MenuManagementView extends StatelessWidget {
         backgroundColor: AppColors.warmOrange,
         onPressed: () => _showAddItemDialog(context),
         icon: const Icon(Icons.add),
-        label: const Text('إضافة صنف'),
+        label: Text('إضافة صنف'),
       ),
     );
   }
@@ -193,7 +193,7 @@ class _MenuManagementView extends StatelessWidget {
                       style: TextButton.styleFrom(
                         foregroundColor: AppColors.creamMuted,
                       ),
-                      child: const Text('إلغاء'),
+                      child: Text('إلغاء'),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     ElevatedButton.icon(
@@ -203,7 +203,7 @@ class _MenuManagementView extends StatelessWidget {
                         Navigator.pop(context);
                       },
                       icon: const Icon(Icons.check_circle_outline, size: 18),
-                      label: const Text('إنشاء'),
+                      label: Text('إنشاء'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.warmOrange,
                         foregroundColor: Colors.white,
@@ -281,7 +281,7 @@ class _MenuManagementView extends StatelessWidget {
                     controller: priceCtrl,
                     style: TextStyle(color: AppColors.cream),
                     keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
+                        TextInputType.numberWithOptions(decimal: true),
                     decoration: InputDecoration(
                       labelText: 'السعر',
                       prefixIcon: Icon(Icons.attach_money, color: AppColors.mutedColor),
@@ -315,7 +315,7 @@ class _MenuManagementView extends StatelessWidget {
                         style: TextButton.styleFrom(
                           foregroundColor: AppColors.creamMuted,
                         ),
-                        child: const Text('إلغاء'),
+                        child: Text('إلغاء'),
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       ElevatedButton.icon(
@@ -333,7 +333,7 @@ class _MenuManagementView extends StatelessWidget {
                           Navigator.pop(context);
                         },
                         icon: const Icon(Icons.check_circle_outline, size: 18),
-                        label: const Text('إنشاء'),
+                        label: Text('إنشاء'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.warmOrange,
                           foregroundColor: Colors.white,
@@ -359,137 +359,45 @@ class _MenuItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.charcoalLight,
+      color: AppColors.surfaceDark,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
-        border: Border.all(color: AppColors.borderColor.withOpacity(0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        side: BorderSide(color: AppColors.borderColor),
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
-          onTap: () {
-            // Optional: Handle item edit if needed
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: AppColors.charcoalMedium,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.borderColor),
-                    image: item.imageUrl != null && item.imageUrl!.isNotEmpty
-                        ? DecorationImage(
-                            image: NetworkImage(item.imageUrl!),
-                            fit: BoxFit.cover,
-                          )
-                        : null,
-                  ),
-                  child: item.imageUrl != null && item.imageUrl!.isNotEmpty
-                      ? null
-                      : Center(
-                          child: Text(
-                            item.displayName.isEmpty
-                                ? '?'
-                                : item.displayName[0].toUpperCase(),
-                            style: TextStyle(
-                                color: AppColors.warmOrange,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.displayName,
-                        style: TextStyle(
-                          color: AppColors.cream,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${item.price.toStringAsFixed(2)} ج.م',
-                        style: TextStyle(
-                          color: AppColors.warmOrange,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: item.isAvailable 
-                            ? AppColors.successGreen.withOpacity(0.15) 
-                            : AppColors.grillRed.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: item.isAvailable 
-                              ? AppColors.successGreen.withOpacity(0.5) 
-                              : AppColors.grillRed.withOpacity(0.5),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            item.isAvailable ? Icons.check_circle : Icons.cancel,
-                            size: 14,
-                            color: item.isAvailable ? AppColors.successGreen : AppColors.grillRed,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            item.isAvailable ? 'متاح' : 'غير متاح',
-                            style: TextStyle(
-                              color: item.isAvailable ? AppColors.successGreen : AppColors.grillRed,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      height: 24,
-                      child: Switch(
-                        value: item.isAvailable,
-                        onChanged: (v) => context.read<MenuCubit>().toggleItemAvailability(item.id, v),
-                        activeColor: AppColors.successGreen,
-                        activeTrackColor: AppColors.successGreen.withOpacity(0.3),
-                        inactiveThumbColor: AppColors.grillRed,
-                        inactiveTrackColor: AppColors.grillRed.withOpacity(0.3),
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+      child: ListTile(
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: AppColors.charcoalMedium,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Text(
+              item.displayName.isEmpty
+                  ? '?'
+                  : item.displayName[0].toUpperCase(),
+              style: TextStyle(
+                  color: AppColors.warmOrange,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold),
             ),
           ),
+        ),
+        title: Text(item.displayName,
+            style: TextStyle(
+                color: AppColors.cream, fontWeight: FontWeight.w600)),
+        subtitle: Text('${item.price.toStringAsFixed(2)} ج.م',
+            style: TextStyle(color: AppColors.creamMuted)),
+        trailing: Switch(
+          value: item.isAvailable,
+          onChanged: (v) =>
+              context.read<MenuCubit>().toggleItemAvailability(item.id, v),
+          activeColor: AppColors.successGreen,
         ),
       ),
     );

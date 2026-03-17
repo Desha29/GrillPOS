@@ -8,7 +8,9 @@ import '../../../core/components/pos_button.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/di/dependency_injection.dart';
+import '../../invoice/presentation/invoice_screen.dart';
 import '../../orders/data/order_models.dart';
+import '../../settings/presentation/cubit/settings_cubit.dart';
 import '../../tables/presentation/cubit/tables_cubit.dart';
 import 'cubit/pos_cubit.dart';
 
@@ -85,7 +87,7 @@ class _MenuSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.read<POSCubit>();
     final width = MediaQuery.of(context).size.width;
-    final crossAxisCount = width > 1700 ? 5 : (width > 1300 ? 4 : 3);
+    final crossAxisCount = width > 1700 ? 6 : (width > 1300 ? 5 : 4);
 
     return Column(
       children: [
@@ -138,9 +140,9 @@ class _MenuSection extends StatelessWidget {
                   padding: const EdgeInsets.all(AppSpacing.md),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: crossAxisCount,
-                    childAspectRatio: 0.75, // Taller cards for premium look
-                    crossAxisSpacing: AppSpacing.md,
-                    mainAxisSpacing: AppSpacing.md,
+                    childAspectRatio: 1.6, // Smaller cards fit better for text
+                    crossAxisSpacing: AppSpacing.sm,
+                    mainAxisSpacing: AppSpacing.sm,
                   ),
                   itemCount: state.visibleItems.length,
                   itemBuilder: (_, i) {
@@ -357,11 +359,19 @@ class _CartSection extends StatelessWidget {
                   onPressed: state.cart.isEmpty
                       ? () {}
                       : () async {
-                          final id = await context.read<POSCubit>().checkout();
-                          if (id == null || !context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text('تم إنشاء الطلب بنجاح: $id')),
+                          final order = await context.read<POSCubit>().checkout();
+                          if (order == null || !context.mounted) return;
+                          final storeInfo = getIt<SettingsCubit>().currentStoreInfo;
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => InvoiceScreen(
+                                order: order,
+                                restaurantName: storeInfo?.name.isNotEmpty == true ? storeInfo!.name : 'GrillPOS',
+                                restaurantPhone: storeInfo?.phone,
+                                restaurantAddress: storeInfo?.address,
+                                restaurantLogo: storeInfo?.logoPath,
+                              ),
+                            ),
                           );
                         },
                 ),

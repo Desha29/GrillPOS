@@ -48,12 +48,12 @@ class AppLogo extends StatelessWidget {
       'assets/images/grillpos/logo_icon.png',
       width: width,
       height: height,
-      fit: fit,
+      fit: BoxFit.contain,
       errorBuilder: (_, __, ___) => Image.asset(
         'assets/images/grillpos/logo_full.png',
         width: width,
         height: height,
-        fit: fit,
+        fit: BoxFit.contain,
       ),
     );
   }

@@ -149,7 +149,7 @@ class POSCubit extends Cubit<POSState> {
     emit(state.copyWith(cart: []));
   }
 
-  Future<String?> checkout(
+  Future<RestaurantOrder?> checkout(
       {String? cashierId, String? waiterId, String? notes}) async {
     if (state.cart.isEmpty) return null;
 
@@ -180,8 +180,11 @@ class POSCubit extends Cubit<POSState> {
         } catch (_) {}
       }
 
+      // Fetch the complete order with items for the invoice
+      final completeOrder = await _ordersRepo.getOrderById(order.id);
+      
       emit(state.copyWith(loading: false, cart: []));
-      return order.id;
+      return completeOrder ?? order;
     } catch (e) {
       emit(state.copyWith(loading: false, error: e.toString()));
       return null;

@@ -59,12 +59,12 @@ class SettingsCubit extends Cubit<SettingsStates> {
         );
         await getIt<ActivityLogger>().logActivity(
           type: ActivityType.userUpdate,
-          description: 'تحديث معلومات المتجر',
+          description: 'تحديث معلومات المطعم',
           userName: userCubit.currentUser.name,
           sessionId: sid,
         );
         
-        emit(StoreInfoUpdateSuccess("تم حفظ معلومات المتجر بنجاح"));
+        emit(StoreInfoUpdateSuccess("تم حفظ معلومات المطعم بنجاح"));
         emit(StoreInfoLoaded(newStoreInfo));
       },
     );

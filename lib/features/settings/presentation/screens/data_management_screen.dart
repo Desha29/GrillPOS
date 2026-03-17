@@ -179,9 +179,8 @@ class _DataManagementScreenState extends State<DataManagementScreen>
     String title,
     String content, {
     IconData icon = LucideIcons.alertCircle,
-    Color? iconColor,
+    Color iconColor = AppColors.primaryColor,
   }) async {
-    final effectiveColor = iconColor ?? AppColors.primaryColor;
     return await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -193,10 +192,10 @@ class _DataManagementScreenState extends State<DataManagementScreen>
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: effectiveColor.withOpacity(0.1),
+                color: iconColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: effectiveColor, size: 22),
+              child: Icon(icon, color: iconColor, size: 22),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -230,7 +229,7 @@ class _DataManagementScreenState extends State<DataManagementScreen>
           const SizedBox(width: 8),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: effectiveColor == AppColors.errorColor
+              backgroundColor: iconColor == AppColors.errorColor
                   ? AppColors.errorColor
                   : AppColors.primaryColor,
               foregroundColor: Colors.white,

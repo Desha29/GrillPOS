@@ -12,6 +12,7 @@ import 'dart:async';
 import 'core/constants/bloc_observer.dart';
 import 'core/di/dependency_injection.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_cubit.dart';
 import 'core/components/message_overlay.dart';
 import 'core/logging/file_logger.dart';
 import 'core/logging/crash_logger.dart';
@@ -183,46 +184,53 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<UserCubit>.value(
-      value: getIt<UserCubit>(),
-      child: MessageOverlay(
-        child: MaterialApp(
-          navigatorKey: navigatorKey,
-          title: 'GrillPOS',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.grillTheme,
-          home: const LoginScreen(),
-          locale: const Locale('ar'),
-          supportedLocales: const [
-            Locale('ar'),
-            Locale('en'),
-          ],
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          builder: (context, child) {
-            // Initialize global message context
-            GlobalMessage.initialize(context);
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<UserCubit>.value(value: getIt<UserCubit>()),
+        BlocProvider<ThemeCubit>(create: (_) => ThemeCubit()),
+      ],
+      child: BlocBuilder<ThemeCubit, ThemeState>(
+        builder: (context, themeState) {
+          return MessageOverlay(
+            child: MaterialApp(
+              navigatorKey: navigatorKey,
+              title: 'GrillPOS',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: themeState.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+              home: const LoginScreen(),
+              locale: const Locale('ar'),
+              supportedLocales: const [
+                Locale('ar'),
+                Locale('en'),
+              ],
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              builder: (context, child) {
+                GlobalMessage.initialize(context);
 
-            return BlocListener<UserCubit, UserStates>(
-              listener: (context, state) {
-                if (state is UserInitial) {
-                  // Global logout handler
-                  navigatorKey.currentState?.pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) => const LoginScreen()),
-                    (route) => false,
-                  );
-                }
+                return BlocListener<UserCubit, UserStates>(
+                  listener: (context, state) {
+                    if (state is UserInitial) {
+                      navigatorKey.currentState?.pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        (route) => false,
+                      );
+                    }
+                  },
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: child!,
+                  ),
+                );
               },
-              child: Directionality(
-                textDirection: TextDirection.rtl,
-                child: child!,
-              ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

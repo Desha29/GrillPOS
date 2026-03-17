@@ -63,7 +63,7 @@ class StoreInfoCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'معلومات المتجر',
+                      'معلومات المطعم',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -76,7 +76,7 @@ class StoreInfoCard extends StatelessWidget {
                           ? null
                           : () => _showEditDialog(context, store!.toMap()),
                       icon: const Icon(LucideIcons.edit2, size: 16),
-                      tooltip: 'تعديل معلومات المتجر',
+                      tooltip: 'تعديل معلومات المطعم',
                     ),
                 ],
               ),
@@ -129,7 +129,7 @@ class StoreInfoCard extends StatelessWidget {
                             children: [
                               _StoreInfoRow(
                                   icon: LucideIcons.store,
-                                  label: 'اسم المتجر',
+                                  label: 'اسم المطعم',
                                   value: store!.name,
                                   theme: theme),
                               _StoreInfoRow(
@@ -163,7 +163,7 @@ class StoreInfoCard extends StatelessWidget {
                             children: [
                               _StoreInfoRow(
                                   icon: LucideIcons.store,
-                                  label: 'اسم المتجر',
+                                  label: 'اسم المطعم',
                                   value: store!.name,
                                   theme: theme),
                               _StoreInfoRow(

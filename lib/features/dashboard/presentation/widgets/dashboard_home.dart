@@ -11,6 +11,7 @@ import '../../../orders/data/order_models.dart';
 import '../../../reports/data/reports_repository.dart';
 import '../../../tables/data/tables_repository.dart';
 import '../../../tables/data/table_models.dart';
+import '../../../../core/session/session_manager.dart';
 
 class DashboardHome extends StatefulWidget {
   const DashboardHome({
@@ -50,10 +51,11 @@ class _DashboardHomeState extends State<DashboardHome> {
       final ordersRepo = getIt<OrdersRepository>();
       final tablesRepo = getIt<TablesRepository>();
 
-      // Load today's summary
+      // Load today's summary or session's summary
       final now = DateTime.now();
-      final todayStart = DateTime(now.year, now.month, now.day);
-      final summary = await reportsRepo.getSummary(from: todayStart);
+      final currentSession = getIt<SessionManager>().currentSession;
+      final sessionStart = currentSession?.openTime ?? DateTime(now.year, now.month, now.day);
+      final summary = await reportsRepo.getSummary(from: sessionStart);
 
       // Load tables
       final tables = await tablesRepo.getTables();
@@ -88,7 +90,7 @@ class _DashboardHomeState extends State<DashboardHome> {
     final cards = [
       _StatData(
         id: 'pos',
-        title: "إيرادات اليوم",
+        title: "إيرادات الوردية",
         value: '${_revenue.toStringAsFixed(2)} ج.م',
         icon: Icons.attach_money,
         color: AppColors.warmOrange,
@@ -97,11 +99,11 @@ class _DashboardHomeState extends State<DashboardHome> {
       ),
       _StatData(
         id: 'orders',
-        title: 'عدد الطلبات',
+        title: 'طلبات الوردية',
         value: '$_ordersCount',
         icon: Icons.receipt_long,
         color: AppColors.ember,
-        trend: 'اليوم',
+        trend: 'الوردية الحالية',
         positive: true,
       ),
       _StatData(
@@ -143,7 +145,7 @@ class _DashboardHomeState extends State<DashboardHome> {
           children: [
             ScreenHeader(
               title: 'الرئيسية',
-              subtitle: 'نظرة عامة على أداء مطعم GrillPOS',
+              subtitle: 'نظرة عامة على الوردية الحالية',
               icon: LucideIcons.layoutDashboard,
               trailingIcon: Icons.refresh,
               onTrailingPressed: _loadData,

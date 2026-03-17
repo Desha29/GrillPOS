@@ -53,7 +53,7 @@ class _EditStoreInfoDialogState extends State<EditStoreInfoDialog> {
 
   void _submit() {
     if (nameCtrl.text.trim().isEmpty) {
-      MotionSnackBarError(context, 'يرجى إدخال اسم المتجر');
+      MotionSnackBarError(context, 'يرجى إدخال اسم المطعم');
       return;
     }
 
@@ -79,11 +79,8 @@ class _EditStoreInfoDialogState extends State<EditStoreInfoDialog> {
         constraints: const BoxConstraints(maxWidth: 600),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            colors: [Colors.white, AppColors.surfaceColor],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: AppColors.surfaceColor,
+          border: Border.all(color: AppColors.borderColor),
         ),
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -100,23 +97,24 @@ class _EditStoreInfoDialogState extends State<EditStoreInfoDialog> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      Icons.store_outlined,
+                      Icons.restaurant_outlined,
                       color: AppColors.primaryColor,
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'تعديل معلومات المتجر',
+                      'تعديل معلومات المطعم',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
+                    icon: Icon(Icons.close, color: AppColors.textPrimary),
                   ),
                 ],
               ),
@@ -167,8 +165,8 @@ class _EditStoreInfoDialogState extends State<EditStoreInfoDialog> {
                             _buildTwoColumnRow([
                               _buildTextField(
                                 nameCtrl,
-                                'اسم المتجر *',
-                                Icons.store,
+                                'اسم المطعم *',
+                                Icons.restaurant,
                               ),
                               _buildTextField(
                                 phoneCtrl,
@@ -200,7 +198,7 @@ class _EditStoreInfoDialogState extends State<EditStoreInfoDialog> {
                           ] else ...[
                             _buildTextField(
                               nameCtrl,
-                              'اسم المتجر *',
+                              'اسم المطعم *',
                               Icons.store,
                             ),
                             const SizedBox(height: 16),

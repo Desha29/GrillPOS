@@ -193,6 +193,18 @@ class _OrdersView extends StatelessWidget {
                 Navigator.of(context).pop();
               },
             ),
+            if (order.status != OrderStatus.cancelled) ...[
+              Divider(color: AppColors.borderColor),
+              ListTile(
+                leading: Icon(Icons.cancel, color: AppColors.grillRed),
+                title: Text('إلغاء الطلب',
+                    style: TextStyle(color: AppColors.grillRed, fontWeight: FontWeight.bold)),
+                onTap: () {
+                  context.read<OrdersCubit>().updateStatus(order.id, OrderStatus.cancelled);
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
           ],
         ),
       ),
