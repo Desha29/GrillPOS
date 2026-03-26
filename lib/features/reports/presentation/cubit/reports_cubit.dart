@@ -108,9 +108,11 @@ class ReportsCubit extends Cubit<ReportsState> {
       final categorySales =
           await _repo.getSalesByCategory(from: effectiveFrom, to: effectiveTo);
       
-      // For trend, we show 7/30 days based on scope
-      final trendDays = activeFilter == ReportFilter.month ? 30 : 7;
-      final trend = await _repo.getDailyRevenueTrend(days: trendDays);
+      final trend = await _repo.getDailyRevenueTrend(
+        from: effectiveFrom,
+        to: effectiveTo,
+        limit: activeFilter == ReportFilter.month ? 31 : (activeFilter == ReportFilter.year ? 365 : 7),
+      );
 
       emit(state.copyWith(
         loading: false,

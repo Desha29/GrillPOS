@@ -4,32 +4,29 @@ class AppColors {
   static bool isDarkMode = false;
 
   // ─── GrillPOS Brand Colors (always same) ──────────────────────────────
-  static const Color warmOrange = Color(0xFFFF5722);       // Primary accent — Grill flame core
-  static const Color grillRed = Color(0xFFD32F2F);         // Danger / Error
-  static const Color ember = Color(0xFFFF9800);             // Secondary accent — Amber skewer
-  static const Color successGreen = Color(0xFF4CAF50);      // Success
-  static const Color flameLight = Color(0xFFC7A857);        // Gold highlight
-
+  static const Color warmOrange =
+      Color(0xFFFF5722); // Primary accent — Grill flame core
+  static const Color grillRed = Color(0xFFD32F2F); // Danger / Error
+  static const Color ember =
+      Color(0xFFFF9800); // Secondary accent — Amber skewer
+  static const Color successGreen = Color(0xFF4CAF50); // Success
+  static const Color flameLight = Color(0xFFC7A857); // Gold highlight
+  static const Color blueMuted = Color(0xFF60A5FA);
   // ─── Theme-aware Colors (switch based on isDarkMode) ──────────────────
-  static Color get charcoalDark => isDarkMode
-      ? const Color(0xFF111418)
-      : const Color(0xFFF5F6FA);
+  static Color get charcoalDark =>
+      isDarkMode ? const Color(0xFF111418) : const Color(0xFFF5F6FA);
 
-  static Color get charcoalMedium => isDarkMode
-      ? const Color(0xFF1A1D24)
-      : const Color(0xFFFFFFFF);
+  static Color get charcoalMedium =>
+      isDarkMode ? const Color(0xFF1A1D24) : const Color(0xFFFFFFFF);
 
-  static Color get charcoalLight => isDarkMode
-      ? const Color(0xFF232730)
-      : const Color(0xFFF8F9FC);
+  static Color get charcoalLight =>
+      isDarkMode ? const Color(0xFF232730) : const Color(0xFFF8F9FC);
 
-  static Color get cream => isDarkMode
-      ? const Color(0xFFF5F5F7)
-      : const Color(0xFF1A1D24);
+  static Color get cream =>
+      isDarkMode ? const Color(0xFFF5F5F7) : const Color(0xFF1A1D24);
 
-  static Color get creamMuted => isDarkMode
-      ? const Color(0xFFA1A5B7)
-      : const Color(0xFF6B7280);
+  static Color get creamMuted =>
+      isDarkMode ? const Color(0xFFA1A5B7) : const Color(0xFF6B7280);
 
   static Color get surfaceDark => charcoalMedium;
 
@@ -52,13 +49,11 @@ class AppColors {
   static Color get textPrimary => cream;
   static Color get textSecondary => creamMuted;
 
-  static Color get mutedColor => isDarkMode
-      ? const Color(0xFF5E6278)
-      : const Color(0xFF9CA3AF);
+  static Color get mutedColor =>
+      isDarkMode ? const Color(0xFF5E6278) : const Color(0xFF9CA3AF);
 
-  static Color get borderColor => isDarkMode
-      ? const Color(0xFF2B2F3A)
-      : const Color(0xFFE5E7EB);
+  static Color get borderColor =>
+      isDarkMode ? const Color(0xFF2B2F3A) : const Color(0xFFE5E7EB);
 
   // Legacy aliases
   static const Color accentGold = ember;
@@ -77,10 +72,10 @@ class AppColors {
   );
 
   static LinearGradient get charcoalGradient => LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [charcoalDark, charcoalMedium],
-  );
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [charcoalDark, charcoalMedium],
+      );
 
   static const LinearGradient fireGradient = LinearGradient(
     begin: Alignment.topCenter,

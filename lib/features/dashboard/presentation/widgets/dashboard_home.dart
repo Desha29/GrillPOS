@@ -30,9 +30,9 @@ class DashboardHome extends StatefulWidget {
 
 class _DashboardHomeState extends State<DashboardHome>
     with SingleTickerProviderStateMixin {
-  final double _revenue = 0;
-  final int _ordersCount = 0;
-  final double _avgOrder = 0;
+  double _revenue = 0;
+  int _ordersCount = 0;
+  double _avgOrder = 0;
   int _occupiedTables = 0;
   int _totalTables = 0;
   List<RestaurantOrder> _recentOrders = [];
@@ -52,16 +52,17 @@ class _DashboardHomeState extends State<DashboardHome>
     );
     _loadData();
 
-    // Listen to streams for real-time updates
-    try {
-      final ordersRepo = getIt<OrdersRepository>();
-      _ordersSub = ordersRepo.ordersStream.listen((_) => _loadData());
-    } catch (_) {}
+    // Listen to repo streams for immediate updates
+    final ordersRepo = getIt<OrdersRepository>();
+    final tablesRepo = getIt<TablesRepository>();
 
-    try {
-      final tablesRepo = getIt<TablesRepository>();
-      _tablesSub = tablesRepo.tablesStream.listen((_) => _loadData());
-    } catch (_) {}
+    _ordersSub = ordersRepo.ordersStream.listen((_) {
+      _loadData();
+    });
+    
+    _tablesSub = tablesRepo.tablesStream.listen((_) {
+      _loadData();
+    });
   }
 
   @override
@@ -79,20 +80,33 @@ class _DashboardHomeState extends State<DashboardHome>
       final ordersRepo = getIt<OrdersRepository>();
       final tablesRepo = getIt<TablesRepository>();
 
-      // Load tables
+      // 1. Load tables
       final tables = await tablesRepo.getTables();
-      final occupiedCount =
-          tables.where((t) => t.status == TableStatus.occupied).length;
+      final occupiedCount = tables.where((t) => t.status == TableStatus.occupied).length;
 
-      // Load recent orders (last 5)
+      // 2. Load today's orders for stats
+      final now = DateTime.now();
+      final todayStart = DateTime(now.year, now.month, now.day);
+      
       final allOrders = await ordersRepo.getOrders(onlyActive: false);
-      final recent = allOrders.take(5).toList();
+      
+      final todayOrders = allOrders.where((o) => o.createdAt.isAfter(todayStart)).toList();
+      final completedToday = todayOrders.where((o) => o.status == OrderStatus.completed).toList();
+      
+      double totalRevenue = 0;
+      for (var o in completedToday) {
+        totalRevenue += o.totalAmount;
+      }
 
+      // 3. Update state
       if (!mounted) return;
       setState(() {
+        _revenue = totalRevenue;
+        _ordersCount = todayOrders.length;
+        _avgOrder = _ordersCount > 0 ? (totalRevenue / _ordersCount) : 0;
         _occupiedTables = occupiedCount;
         _totalTables = tables.length;
-        _recentOrders = recent;
+        _recentOrders = allOrders.take(10).toList();
         _isLoading = false;
       });
 
@@ -175,8 +189,16 @@ class _DashboardHomeState extends State<DashboardHome>
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final w = constraints.maxWidth;
-                final columns = w > 1100 ? 4 : w > 600 ? 2 : 1;
-                final aspectRatio = w > 1100 ? 2.2 : w > 600 ? 2.0 : 3.5;
+                final columns = w > 1100
+                    ? 4
+                    : w > 600
+                        ? 2
+                        : 1;
+                final aspectRatio = w > 1100
+                    ? 2.2
+                    : w > 600
+                        ? 2.0
+                        : 3.5;
                 if (_isLoading) return _buildSkeletonCards(columns);
                 return GridView.builder(
                     shrinkWrap: true,
@@ -209,143 +231,302 @@ class _DashboardHomeState extends State<DashboardHome>
               },
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.lg),
 
-          // ─── Recent Orders (Scrollable) ───
+          // ─── Bottom Sections (Recent Orders & Quick Actions) ───
+          // ─── Bottom Sections (Recent Orders & Quick Actions) ───
           Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                  child: Container(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceDark,
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.cardRadius),
-                      border: Border.all(color: AppColors.borderColor),
-                    ),
-                    child: Column(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final w = constraints.maxWidth;
+                  final isWide = w > 900;
+
+                  if (isWide) {
+                    return Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: AppColors.warmOrange.withOpacity(0.12),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(
-                                LucideIcons.clipboardList,
-                                color: AppColors.warmOrange,
-                                size: 18,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                'آخر الطلبات',
-                                style: TextStyle(
-                                  color: AppColors.cream,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (_recentOrders.isNotEmpty)
-                              TextButton.icon(
-                                onPressed: () => widget.onCardTap('orders'),
-                                icon: Icon(
-                                  LucideIcons.arrowLeft,
-                                  size: 14,
-                                  color: AppColors.warmOrange,
-                                ),
-                                label: Text(
-                                  'عرض الكل',
-                                  style: TextStyle(
-                                    color: AppColors.warmOrange,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                          ],
+                        Expanded(
+                          flex: 3,
+                          child: _buildRecentOrdersSection(fillHeight: true),
                         ),
-                        const SizedBox(height: AppSpacing.sm),
-                        _isLoading
-                            ? Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(32.0),
-                                  child: CircularProgressIndicator(
-                                    color: AppColors.warmOrange,
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                              )
-                            : _recentOrders.isEmpty
-                                ? Center(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(32.0),
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            LucideIcons.clipboardList,
-                                            size: 48,
-                                            color: AppColors.mutedColor
-                                                .withOpacity(0.3),
-                                          ),
-                                          const SizedBox(height: 12),
-                                          Text(
-                                            'لا توجد طلبات بعد',
-                                            style: TextStyle(
-                                              color: AppColors.creamMuted,
-                                              fontSize: 15,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            'ستظهر الطلبات الجديدة هنا تلقائياً',
-                                            style: TextStyle(
-                                              color: AppColors.mutedColor,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  )
-                                : ListView.builder(
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    padding: EdgeInsets.zero,
-                                    itemCount: _recentOrders.length,
-                                    itemBuilder: (_, i) {
-                                      return _AnimatedCardWrapper(
-                                        index: i,
-                                        controller: _animController,
-                                        child: OrderCard(
-                                          order: _recentOrders[i],
-                                          onTap: () => widget.onOrderTap(_recentOrders[i]),
-                                        ),
-                                      );
-                                    },
-                                  ),
+                        const SizedBox(width: AppSpacing.lg),
+                        SizedBox(
+                          width: 300, // Fixed width for quick actions on wide screen
+                          child: _buildQuickActionsSection(),
+                        ),
+                      ],
+                    );
+                  }
+
+                  return SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+                    child: Column(
+                      children: [
+                        _buildQuickActionsSection(horizontal: true),
+                        const SizedBox(height: AppSpacing.lg),
+                        _buildRecentOrdersSection(fillHeight: false),
                       ],
                     ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-              ],
+                  );
+                },
+              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionsSection({bool horizontal = false}) {
+    final quickActions = [
+      _QuickAction(
+        id: 'pos',
+        title: 'طلب جديد',
+        icon: LucideIcons.plusCircle,
+        color: AppColors.warmOrange,
+      ),
+      _QuickAction(
+        id: 'tables',
+        title: 'الطاولات',
+        icon: LucideIcons.grid,
+        color: AppColors.ember,
+      ),
+      _QuickAction(
+        id: 'orders',
+        title: 'الطلبات',
+        icon: LucideIcons.receipt,
+        color: AppColors.flameLight,
+      ),
+      _QuickAction(
+        id: 'menu',
+        title: 'المنيو',
+        icon: LucideIcons.bookOpen,
+        color: AppColors.successGreen,
+      ),
+      _QuickAction(
+        id: 'reports',
+        title: 'التقرير',
+        icon: LucideIcons.barChart3,
+        color: AppColors.grillRed,
+      ),
+      _QuickAction(
+        id: 'users',
+        title: 'الموظفين',
+        icon: LucideIcons.users,
+        color: AppColors.blueMuted,
+      ),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceDark,
+        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+        border: Border.all(color: AppColors.borderColor),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.successGreen.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  LucideIcons.zap,
+                  color: AppColors.successGreen,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'عمليات سريعة',
+                style: TextStyle(
+                  color: AppColors.cream,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _buildQuickActionsGrid(quickActions, horizontal: horizontal),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionsGrid(List<_QuickAction> quickActions, {bool horizontal = false}) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: quickActions.length,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: horizontal ? (quickActions.length <= 4 ? 4 : 6) : 2,
+        crossAxisSpacing: AppSpacing.sm,
+        mainAxisSpacing: AppSpacing.sm,
+        childAspectRatio: horizontal ? 1.8 : 1.3,
+      ),
+      itemBuilder: (_, i) {
+        final action = quickActions[i];
+        return _QuickActionCard(
+          title: action.title,
+          icon: action.icon,
+          color: action.color,
+          onTap: () => widget.onCardTap(action.id),
+        );
+      },
+    );
+  }
+
+  Widget _buildRecentOrdersSection({bool fillHeight = false}) {
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.warmOrange.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                LucideIcons.clipboardList,
+                color: AppColors.warmOrange,
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'آخر الطلبات',
+                style: TextStyle(
+                  color: AppColors.cream,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (_recentOrders.isNotEmpty)
+              TextButton.icon(
+                onPressed: () => widget.onCardTap('orders'),
+                icon: Icon(
+                  LucideIcons.arrowLeft,
+                  size: 14,
+                  color: AppColors.warmOrange,
+                ),
+                label: Text(
+                  'عرض الكل',
+                  style: TextStyle(
+                    color: AppColors.warmOrange,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        if (fillHeight)
+          Expanded(
+            child: _buildRecentOrdersList(),
+          )
+        else
+          _buildRecentOrdersList(),
+      ],
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceDark,
+        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+        border: Border.all(color: AppColors.borderColor),
+      ),
+      child: content,
+    );
+  }
+
+  Widget _buildRecentOrdersList() {
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32.0),
+          child: CircularProgressIndicator(color: AppColors.warmOrange),
+        ),
+      );
+    }
+
+    if (_recentOrders.isEmpty) {
+      return _buildEmptyOrders();
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.zero,
+      itemCount: _recentOrders.length,
+      itemBuilder: (_, i) {
+        return _AnimatedCardWrapper(
+          index: i,
+          controller: _animController,
+          child: OrderCard(
+            order: _recentOrders[i],
+            onTap: () => widget.onOrderTap(_recentOrders[i]),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyOrders() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(48.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.mutedColor.withOpacity(0.05),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                LucideIcons.clipboardList,
+                size: 48,
+                color: AppColors.mutedColor.withOpacity(0.3),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'لا توجد طلبات بعد',
+              style: TextStyle(
+                color: AppColors.creamMuted,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'ستظهر الطلبات الجديدة هنا تلقائياً عند البدء في استقبال الزبائن',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.mutedColor,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -380,6 +561,103 @@ class _DashboardHomeState extends State<DashboardHome>
       ),
     );
   }
+}
+
+class _QuickActionCard extends StatefulWidget {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickActionCard({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  State<_QuickActionCard> createState() => _QuickActionCardState();
+}
+
+class _QuickActionCardState extends State<_QuickActionCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedScale(
+        scale: _isHovered ? 1.05 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutBack,
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              color: _isHovered ? AppColors.charcoalLight : AppColors.charcoalMedium,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _isHovered ? widget.color : AppColors.borderColor,
+                width: _isHovered ? 1.5 : 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _isHovered ? widget.color.withOpacity(0.15) : Colors.black.withOpacity(0.05),
+                  blurRadius: _isHovered ? 12 : 4,
+                  offset: Offset(0, _isHovered ? 4 : 2),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _isHovered ? widget.color.withOpacity(0.2) : widget.color.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    widget.icon,
+                    color: widget.color,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  widget.title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.cream,
+                    fontSize: 12,
+                    fontWeight: _isHovered ? FontWeight.bold : FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickAction {
+  final String id;
+  final String title;
+  final IconData icon;
+  final Color color;
+
+  const _QuickAction({
+    required this.id,
+    required this.title,
+    required this.icon,
+    required this.color,
+  });
 }
 
 class _AnimatedCardWrapper extends StatelessWidget {

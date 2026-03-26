@@ -199,7 +199,7 @@ class _OrdersViewState extends State<_OrdersView> {
                           emptyText: 'لا توجد طلبات نشطة حالياً',
                           emptyIcon: Icons.receipt_long_outlined,
                           onTap: (order) =>
-                              _showActionSheet(context, order),
+                              _showActionDialog(context, order),
                         ),
                         _OrdersList(
                           orders: filteredHistory,
@@ -274,110 +274,181 @@ class _OrdersViewState extends State<_OrdersView> {
     }
   }
 
-  void _showActionSheet(BuildContext context, RestaurantOrder order) {
-    showModalBottomSheet(
+  void _showActionDialog(BuildContext context, RestaurantOrder order) {
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.surfaceDark,
-      shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppSpacing.cardRadius)),
-      ),
-      builder: (_) => SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'طلب #${order.orderNumber}',
-                      style: TextStyle(
-                        color: AppColors.cream,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      order.orderType == OrderType.dineIn
-                          ? 'طاولة ${order.tableId ?? '?'}'
-                          : 'تيك أواي',
-                      style: TextStyle(
-                          color: AppColors.warmOrange,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Divider(color: AppColors.borderColor),
-                ...OrderStatus.values
-                    .where((s) => s != OrderStatus.cancelled)
-                    .map(
-                      (s) => ListTile(
-                        leading: Icon(
-                          order.status == s
-                              ? Icons.radio_button_checked
-                              : Icons.radio_button_off,
-                          color: order.status == s
-                              ? AppColors.warmOrange
-                              : AppColors.mutedColor,
-                          size: 20,
-                        ),
-                        title: Text(
-                          s.displayName,
-                          style: TextStyle(
-                            color: order.status == s
-                                ? AppColors.warmOrange
-                                : AppColors.cream,
-                            fontWeight: order.status == s
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                        ),
-                        onTap: () {
-                          context
-                              .read<OrdersCubit>()
-                              .updateStatus(order.id, s);
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ),
-                Divider(color: AppColors.borderColor),
-                ListTile(
-                  leading:
-                      Icon(Icons.check_circle, color: AppColors.successGreen),
-                  title: Text('تم الدفع وإرشاد الطلب للأرشيف',
-                      style: TextStyle(
-                          color: AppColors.successGreen,
-                          fontWeight: FontWeight.bold)),
-                  onTap: () {
-                    context.read<OrdersCubit>().markPaid(order.id);
-                    Navigator.of(context).pop();
-                  },
-                ),
-                if (order.status != OrderStatus.cancelled) ...[
-                  Divider(color: AppColors.borderColor),
-                  ListTile(
-                    leading: Icon(Icons.cancel, color: AppColors.grillRed),
-                    title: Text('إلغاء الطلب',
+      builder: (dialogContext) => Dialog(
+        backgroundColor: AppColors.surfaceDark,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          constraints: const BoxConstraints(maxWidth: 500),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'إدارة الطلب #${order.orderNumber}',
                         style: TextStyle(
-                            color: AppColors.grillRed,
-                            fontWeight: FontWeight.bold)),
-                    onTap: () {
-                      context
-                          .read<OrdersCubit>()
-                          .updateStatus(order.id, OrderStatus.cancelled);
-                      Navigator.of(context).pop();
-                    },
+                          color: AppColors.cream,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        order.orderType == OrderType.dineIn
+                            ? 'طاولة ${order.tableId ?? '?'}'
+                            : 'تيك أواي / توصيل',
+                        style: TextStyle(color: AppColors.warmOrange, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    icon: Icon(Icons.close, color: AppColors.mutedColor),
                   ),
                 ],
-              ],
-            ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'تحديث حالة الطلب',
+                style: TextStyle(color: AppColors.mutedColor, fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: OrderStatus.values
+                    .where((s) => s != OrderStatus.cancelled)
+                    .map((s) {
+                  final isSelected = order.status == s;
+                  return _StatusActionChip(
+                    label: s.displayName,
+                    isSelected: isSelected,
+                    onTap: () {
+                      context.read<OrdersCubit>().updateStatus(order.id, s);
+                      Navigator.pop(dialogContext);
+                    },
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 24),
+              Divider(color: AppColors.borderColor),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _DialogActionBtn(
+                      label: 'تم الدفع والأرشفة',
+                      icon: LucideIcons.checkCheck,
+                      color: AppColors.successGreen,
+                      onTap: () {
+                        context.read<OrdersCubit>().markPaid(order.id);
+                        Navigator.pop(dialogContext);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _DialogActionBtn(
+                      label: 'إلغاء الطلب',
+                      icon: LucideIcons.xCircle,
+                      color: AppColors.grillRed,
+                      onTap: () {
+                        context.read<OrdersCubit>().updateStatus(order.id, OrderStatus.cancelled);
+                        Navigator.pop(dialogContext);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusActionChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _StatusActionChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.warmOrange : AppColors.charcoalMedium,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? AppColors.warmOrange : AppColors.borderColor,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : AppColors.cream,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DialogActionBtn extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _DialogActionBtn({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+          ],
         ),
       ),
     );

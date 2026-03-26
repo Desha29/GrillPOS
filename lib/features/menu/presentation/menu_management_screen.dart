@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/logging/file_logger.dart';
 import '../../../core/components/screen_header.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/di/dependency_injection.dart';
+import '../../../core/functions/messege.dart';
 import '../data/menu_models.dart';
 import 'cubit/menu_cubit.dart';
 
@@ -104,7 +106,12 @@ class _MenuManagementView extends StatelessWidget {
               },
             ),
             Expanded(
-              child: BlocBuilder<MenuCubit, MenuState>(
+              child: BlocConsumer<MenuCubit, MenuState>(
+                listener: (context, state) {
+                  if (state.error != null) {
+                    MotionSnackBarError(context, state.error!);
+                  }
+                },
                 builder: (context, state) {
                   if (state.loading &&
                       state.categories.isEmpty &&
@@ -387,17 +394,29 @@ class _MenuManagementView extends StatelessWidget {
                       ElevatedButton.icon(
                         onPressed: () {
                           final name = nameCtrl.text.trim();
-                          final price =
-                              double.tryParse(priceCtrl.text.trim()) ?? 0;
-                          if (name.isEmpty || price <= 0) return;
+                          final priceStr = priceCtrl.text.trim();
+                          
+                          if (name.isEmpty) {
+                            MotionSnackBarWarning(context, "يرجى إدخال اسم الصنف");
+                            return;
+                          }
+                          
+                          final price = double.tryParse(priceStr) ?? 0;
+                          if (price <= 0) {
+                            MotionSnackBarWarning(context, "يرجى إدخال سعر صحيح (أكبر من 0)");
+                            return;
+                          }
 
                           // Use the locally captured cubit
+                          FileLogger.info('Menu: Adding item $name to category $categoryId', source: 'MenuUI');
                           cubit.addItem(
                             name: name,
+                            nameAr: name, 
                             categoryId: categoryId,
                             price: price,
                             unit: unitCtrl.text.trim().isEmpty ? null : unitCtrl.text.trim(),
                           );
+                          MotionSnackBarSuccess(context, "تمت إضافة الصنف بنجاح");
                           Navigator.pop(context);
                         },
                         icon: const Icon(Icons.check_circle_outline, size: 18),

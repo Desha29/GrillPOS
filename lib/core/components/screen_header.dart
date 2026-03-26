@@ -13,6 +13,7 @@ class ScreenHeader extends StatelessWidget {
   final Color? iconColor;
   final Color? subtitleColor;
   final IconData? trailingIcon;
+  final Widget? trailingWidget;
   final VoidCallback? onTrailingPressed;
   final VoidCallback? onBackPressed;
 
@@ -26,6 +27,7 @@ class ScreenHeader extends StatelessWidget {
     this.subtitleColor,
     this.iconColor,
     this.trailingIcon,
+    this.trailingWidget,
     this.onTrailingPressed,
     this.onBackPressed,
   });
@@ -122,7 +124,10 @@ class ScreenHeader extends StatelessWidget {
               ),
             ),
             // Trailing action
-            if (trailingIcon != null) ...[
+            if (trailingWidget != null) ...[
+              const SizedBox(width: 8),
+              trailingWidget!,
+            ] else if (trailingIcon != null) ...[
               const SizedBox(width: 8),
               Material(
                 color: (iconColor ?? AppColors.warmOrange).withOpacity(0.12),

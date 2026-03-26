@@ -118,13 +118,13 @@ void main() async {
         if (fileExists) {
           FileLogger.info('App starting normally', source: 'Main');
           runApp(DevicePreview(
-            enabled: !kReleaseMode,
+            enabled: kReleaseMode,
             builder: (context) => const MyApp(),
           ));
         } else {
           FileLogger.info('App starting in activation mode', source: 'Main');
           runApp(DevicePreview(
-            enabled: !kReleaseMode,
+            enabled: kReleaseMode,
             builder: (contest) => const ActivationScreen(),
           ));
         }

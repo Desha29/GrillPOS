@@ -63,8 +63,8 @@ class _TableCardState extends State<TableCard> with SingleTickerProviderStateMix
         statusIcon = Icons.event_available;
         break;
       case TableStatus.cleaning:
-        statusColor = AppColors.warningColor;
-        statusBgColor = AppColors.warningColor.withOpacity(0.1);
+        statusColor = AppColors.blueMuted;
+        statusBgColor = AppColors.blueMuted.withOpacity(0.1);
         statusIcon = Icons.cleaning_services;
         break;
     }

@@ -102,6 +102,18 @@ class TablesScreen extends StatelessWidget {
                                       (t) => t.status == TableStatus.reserved)
                                   .length,
                               color: AppColors.ember),
+                          _StatusBadge(
+                            label: 'تنظيف',
+                            count: state.tables
+                                .where((t) => t.status == TableStatus.cleaning)
+                                .length,
+                            color: AppColors.blueMuted,
+                          ),
+                          _StatusBadge(
+                            label: 'إجمالي الطاولات',
+                            count: state.tables.length,
+                            color: AppColors.warmOrange,
+                          ),
                         ],
                       ),
                     ),
@@ -241,81 +253,127 @@ class TablesScreen extends StatelessWidget {
   }
 
   void _showStatusSheet(BuildContext context, RestaurantTable table) {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: AppColors.surfaceDark,
-      shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppSpacing.cardRadius)),
-      ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              table.displayName,
-              style: TextStyle(
-                color: AppColors.cream,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            ...TableStatus.values.map(
-              (s) => ListTile(
-                leading: Icon(
-                  table.status == s
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_off,
-                  color: table.status == s
-                      ? AppColors.warmOrange
-                      : AppColors.mutedColor,
-                  size: 20,
+      builder: (dialogCtx) => Dialog(
+        backgroundColor: AppColors.charcoalMedium,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+          side: BorderSide(color: AppColors.borderColor, width: 1.5),
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      table.displayName,
+                      style: TextStyle(
+                        color: AppColors.cream,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(dialogCtx),
+                      icon: Icon(Icons.close, color: AppColors.creamMuted),
+                    ),
+                  ],
                 ),
-                title: Text(
-                  s.displayName,
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  'تغيير حالة الطاولة',
                   style: TextStyle(
-                    color: table.status == s
-                        ? AppColors.warmOrange
-                        : AppColors.cream,
-                    fontWeight:
-                        table.status == s ? FontWeight.bold : FontWeight.normal,
+                    color: AppColors.mutedColor,
+                    fontSize: 14,
                   ),
                 ),
-                onTap: () {
-                  context.read<TablesCubit>().changeStatus(table.id, s);
-                  Navigator.of(context).pop();
-                },
-              ),
+                const SizedBox(height: AppSpacing.sm),
+                ...TableStatus.values.map(
+                  (s) => ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 0),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: (table.status == s
+                                ? AppColors.warmOrange
+                                : AppColors.mutedColor)
+                            .withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        table.status == s
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_off,
+                        color: table.status == s
+                            ? AppColors.warmOrange
+                            : AppColors.mutedColor,
+                        size: 20,
+                      ),
+                    ),
+                    title: Text(
+                      s.displayName,
+                      style: TextStyle(
+                        color: table.status == s
+                            ? AppColors.warmOrange
+                            : AppColors.cream,
+                        fontWeight: table.status == s
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                    onTap: () {
+                      context.read<TablesCubit>().changeStatus(table.id, s);
+                      Navigator.of(dialogCtx).pop();
+                    },
+                  ),
+                ),
+                Divider(color: AppColors.borderColor, height: AppSpacing.lg),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(dialogCtx);
+                          _showEditTableDialog(context, table);
+                        },
+                        icon: Icon(Icons.edit_outlined, size: 18),
+                        label: Text('تعديل'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.cream,
+                          side: BorderSide(color: AppColors.borderColor),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(dialogCtx);
+                          _confirmDeleteTable(context, table);
+                        },
+                        icon: Icon(Icons.delete_outline, size: 18),
+                        label: Text('حذف'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.grillRed,
+                          side: BorderSide(
+                              color: AppColors.grillRed.withOpacity(0.5)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            Divider(color: AppColors.borderColor),
-            ListTile(
-              leading: Icon(Icons.edit_outlined, color: AppColors.cream),
-              title: Text(
-                'تعديل الطاولة',
-                style: TextStyle(
-                    color: AppColors.cream, fontWeight: FontWeight.bold),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _showEditTableDialog(context, table);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.delete_outline, color: AppColors.grillRed),
-              title: Text(
-                'حذف الطاولة',
-                style: TextStyle(
-                    color: AppColors.grillRed, fontWeight: FontWeight.bold),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _confirmDeleteTable(context, table);
-              },
-            ),
-          ],
+          ),
         ),
       ),
     );

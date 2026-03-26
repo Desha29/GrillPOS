@@ -11,6 +11,8 @@ import '../data/reports_repository.dart';
 import '../../../core/components/custom_date_range_picker.dart';
 import 'cubit/reports_cubit.dart';
 
+import 'report_details_screen.dart';
+
 class ReportsScreen extends StatelessWidget {
   const ReportsScreen({super.key});
 
@@ -41,8 +43,40 @@ class _ReportsView extends StatelessWidget {
                     title: 'التقارير والإحصائيات',
                     subtitle: 'تحليل أداء المبيعات والأصناف الأكثر طلباً',
                     icon: Icons.pie_chart_outline,
-                    trailingIcon: Icons.refresh,
-                    onTrailingPressed: () => context.read<ReportsCubit>().load(),
+                    trailingWidget: Row(
+                      children: [
+                        if (state.summary != null)
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ReportDetailsScreen(
+                                    summary: state.summary!,
+                                    topItems: state.topItems,
+                                    reportTitle: state.currentFilter == ReportFilter.today ? 'تقرير مبيعات اليوم' : 'تقرير المبيعات التفصيلي',
+                                    from: state.customFrom,
+                                    to: state.customTo,
+                                  ),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.description, size: 18),
+                            label: const Text('التقرير المفصل'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.warmOrange.withOpacity(0.15),
+                              foregroundColor: AppColors.warmOrange,
+                              elevation: 0,
+                              side: const BorderSide(color: AppColors.warmOrange),
+                            ),
+                          ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: () => context.read<ReportsCubit>().load(),
+                          icon: Icon(Icons.refresh, color: AppColors.cream),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
