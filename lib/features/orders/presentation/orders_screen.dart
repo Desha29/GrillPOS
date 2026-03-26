@@ -11,6 +11,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/di/dependency_injection.dart';
 import '../data/order_models.dart';
 import '../data/orders_repository.dart';
+import '../../../core/components/custom_date_range_picker.dart';
 import 'cubit/orders_cubit.dart';
 
 class OrdersScreen extends StatelessWidget {
@@ -258,23 +259,10 @@ class _OrdersViewState extends State<_OrdersView> {
   }
 
   Future<void> _pickDateRange() async {
-    final range = await showDateRangePicker(
+    final range = await CustomDateRangePicker.show(
       context: context,
       firstDate: DateTime(2024),
       lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-                  primary: AppColors.warmOrange,
-                  onPrimary: Colors.white,
-                  surface: AppColors.charcoalMedium,
-                  onSurface: AppColors.cream,
-                ),
-          ),
-          child: child!,
-        );
-      },
     );
 
     if (range != null) {

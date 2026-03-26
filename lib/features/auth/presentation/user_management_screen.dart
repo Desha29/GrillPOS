@@ -364,6 +364,7 @@ class _AnimatedUserCardState extends State<_AnimatedUserCard>
                   padding: EdgeInsets.all(widget.columns > 3 ? AppSpacing.md : AppSpacing.lg),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       // Avatar
                       AnimatedContainer(

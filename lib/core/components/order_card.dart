@@ -119,7 +119,7 @@ class OrderCard extends StatelessWidget {
                                   border: Border.all(color: AppColors.borderColor),
                                 ),
                                 child: Text(
-                                  'طاولة ${order.tableId?.replaceAll('table_', '')}',
+                                  'طاولة ${order.tableId?.replaceAll('table_', '').replaceAll('Table', '').trim()}',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: AppColors.cream,

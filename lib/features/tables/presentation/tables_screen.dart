@@ -112,7 +112,7 @@ class TablesScreen extends StatelessWidget {
                           final crossAxisCount = constraints.maxWidth > 1200
                               ? 6
                               : constraints.maxWidth > 900
-                                  ? 4
+                                  ? 6
                                   : 2;
                           return GridView.builder(
                             itemCount: state.tables.length,

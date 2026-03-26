@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -112,23 +113,32 @@ class _MenuSection extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.borderColor),
               ),
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                children: [
-                  _CategoryChip(
-                    label: 'الكل',
-                    selected: state.selectedCategoryId == null,
-                    onTap: () => cubit.selectCategory(null),
-                  ),
-                  ...state.categories.map(
-                    (c) => _CategoryChip(
-                      label: c.displayName,
-                      selected: state.selectedCategoryId == c.id,
-                      onTap: () => cubit.selectCategory(c.id),
+              child: ScrollConfiguration(
+                behavior: ScrollConfiguration.of(context).copyWith(
+                  dragDevices: {
+                    PointerDeviceKind.touch,
+                    PointerDeviceKind.mouse,
+                    PointerDeviceKind.trackpad,
+                  },
+                ),
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  children: [
+                    _CategoryChip(
+                      label: 'الكل',
+                      selected: state.selectedCategoryId == null,
+                      onTap: () => cubit.selectCategory(null),
                     ),
-                  ),
-                ],
+                    ...state.categories.map(
+                      (c) => _CategoryChip(
+                        label: c.displayName,
+                        selected: state.selectedCategoryId == c.id,
+                        onTap: () => cubit.selectCategory(c.id),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -464,7 +474,7 @@ class _CartSection extends StatelessWidget {
           ),
           // Totals + Checkout
           Container(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
             decoration: BoxDecoration(
               color: AppColors.surfaceDark,
               border: Border(top: BorderSide(color: AppColors.borderColor)),
@@ -475,11 +485,11 @@ class _CartSection extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _amountRow(context, 'المجموع الفرعي', state.subtotal),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 1),
                   _amountRow(context, 'الضريبة (${(state.taxRate * 100).toStringAsFixed(0)}%)', state.tax, isTax: true, taxRate: state.taxRate),
-                  Divider(color: AppColors.borderColor, height: AppSpacing.md),
+                  Divider(color: AppColors.borderColor, height: 12),
                   _amountRow(context, 'الإجمالي', state.total, isTotal: true),
-                  const SizedBox(height: AppSpacing.sm),
+                  const SizedBox(height: 8),
                   POSButton(
                     label: 'إتمام الطلب',
                     icon: Icons.payment,

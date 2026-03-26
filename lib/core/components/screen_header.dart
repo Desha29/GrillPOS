@@ -34,21 +34,21 @@ class ScreenHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
-    
+
     final adaptiveFontSize = screenWidth < 600
-        ? fontSize * 0.75
+        ? fontSize * 0.70
         : screenWidth < 900
             ? fontSize * 0.85
             : fontSize;
 
-    final adaptiveSubtitleSize = screenWidth < 600 ? 13.0 : 14.0;
+    final adaptiveSubtitleSize = screenWidth < 600 ? 12.0 : 14.0;
 
     return FadeSlideIn(
       beginOffset: const Offset(0, 0.15),
       duration: const Duration(milliseconds: 600),
       child: Container(
         padding: EdgeInsets.symmetric(
-          vertical: screenWidth > 768 ? 14 : 10,
+          vertical: screenWidth > 768 ? 14 : 8,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -62,15 +62,16 @@ class ScreenHeader extends StatelessWidget {
                   onTap: onBackPressed,
                   borderRadius: BorderRadius.circular(10),
                   child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Icon(Icons.arrow_back, color: AppColors.cream, size: 20),
+                    padding: const EdgeInsets.all(8),
+                    child: Icon(Icons.arrow_back,
+                        color: AppColors.cream, size: 20),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
             ],
             // Icon
-            if (icon != null) ...[
+            if (icon != null && screenWidth > 380) ...[
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
@@ -83,7 +84,7 @@ class ScreenHeader extends StatelessWidget {
                   size: adaptiveFontSize * 0.7,
                 ),
               ),
-              SizedBox(width: screenWidth > 768 ? 14 : 10),
+              SizedBox(width: screenWidth > 768 ? 12 : 8),
             ],
             // Title & Subtitle
             Expanded(
@@ -93,7 +94,7 @@ class ScreenHeader extends StatelessWidget {
                 children: [
                   FittedBox(
                     fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerRight,
+                    alignment: AlignmentDirectional.centerStart,
                     child: Text(
                       title,
                       style: theme.textTheme.headlineMedium?.copyWith(
@@ -101,27 +102,28 @@ class ScreenHeader extends StatelessWidget {
                         color: titleColor ?? AppColors.cream,
                         fontSize: adaptiveFontSize,
                         letterSpacing: -0.3,
-                        height: 1.2,
+                        height: 1.1,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   Text(
                     subtitle,
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: subtitleColor ?? AppColors.creamMuted,
                       fontSize: adaptiveSubtitleSize,
                       fontWeight: FontWeight.w400,
-                      height: 1.3,
+                      height: 1.2,
                     ),
                     overflow: TextOverflow.ellipsis,
-                    maxLines: 2,
+                    maxLines: 1,
                   ),
                 ],
               ),
             ),
             // Trailing action
-            if (trailingIcon != null)
+            if (trailingIcon != null) ...[
+              const SizedBox(width: 8),
               Material(
                 color: (iconColor ?? AppColors.warmOrange).withOpacity(0.12),
                 borderRadius: BorderRadius.circular(10),
@@ -129,15 +131,16 @@ class ScreenHeader extends StatelessWidget {
                   onTap: onTrailingPressed,
                   borderRadius: BorderRadius.circular(10),
                   child: Padding(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(8),
                     child: Icon(
                       trailingIcon,
                       color: iconColor ?? AppColors.warmOrange,
-                      size: 22,
+                      size: 20,
                     ),
                   ),
                 ),
               ),
+            ],
           ],
         ),
       ),

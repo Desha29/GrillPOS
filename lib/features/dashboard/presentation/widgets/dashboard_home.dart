@@ -16,10 +16,12 @@ class DashboardHome extends StatefulWidget {
   const DashboardHome({
     super.key,
     required this.onCardTap,
+    required this.onOrderTap,
     required this.isManager,
   });
 
   final void Function(String id) onCardTap;
+  final void Function(RestaurantOrder order) onOrderTap;
   final bool isManager;
 
   @override
@@ -153,10 +155,9 @@ class _DashboardHomeState extends State<DashboardHome>
           colors: [AppColors.charcoalDark, AppColors.charcoalMedium],
         ),
       ),
-      child: ListView(
-        padding: EdgeInsets.zero,
+      child: Column(
         children: [
-          // ─── Fixed Header + Stat Cards ───
+          // ─── Pinned Header + Stat Cards ───
           Padding(
             padding: const EdgeInsets.fromLTRB(
                 AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 0),
@@ -174,8 +175,8 @@ class _DashboardHomeState extends State<DashboardHome>
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final w = constraints.maxWidth;
-                final columns = w > 1400 ? 4 : w > 600 ? 2 : 1;
-                final aspectRatio = w > 1400 ? 2.2 : w > 600 ? 2.0 : 3.5;
+                final columns = w > 1100 ? 4 : w > 600 ? 2 : 1;
+                final aspectRatio = w > 1100 ? 2.2 : w > 600 ? 2.0 : 3.5;
                 if (_isLoading) return _buildSkeletonCards(columns);
                 return GridView.builder(
                     shrinkWrap: true,
@@ -204,135 +205,146 @@ class _DashboardHomeState extends State<DashboardHome>
                           ),
                         ),
                       );
-                    },
-                  );
+                    });
               },
             ),
           ),
           const SizedBox(height: AppSpacing.md),
 
-          // ─── Recent Orders ───
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceDark,
-                borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
-                border: Border.all(color: AppColors.borderColor),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.warmOrange.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          LucideIcons.clipboardList,
-                          color: AppColors.warmOrange,
-                          size: 18,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'آخر الطلبات',
-                        style: TextStyle(
-                          color: AppColors.cream,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Spacer(),
-                      if (_recentOrders.isNotEmpty)
-                        TextButton.icon(
-                          onPressed: () => widget.onCardTap('orders'),
-                          icon: Icon(
-                            LucideIcons.arrowLeft,
-                            size: 14,
-                            color: AppColors.warmOrange,
-                          ),
-                          label: Text(
-                            'عرض الكل',
-                            style: TextStyle(
-                              color: AppColors.warmOrange,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
+          // ─── Recent Orders (Scrollable) ───
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                  child: Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceDark,
+                      borderRadius:
+                          BorderRadius.circular(AppSpacing.cardRadius),
+                      border: Border.all(color: AppColors.borderColor),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColors.warmOrange.withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                LucideIcons.clipboardList,
+                                color: AppColors.warmOrange,
+                                size: 18,
+                              ),
                             ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _isLoading
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(32.0),
-                            child: CircularProgressIndicator(
-                              color: AppColors.warmOrange,
-                              strokeWidth: 2,
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'آخر الطلبات',
+                                style: TextStyle(
+                                  color: AppColors.cream,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                        )
-                      : _recentOrders.isEmpty
-                          ? Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(32.0),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      LucideIcons.clipboardList,
-                                      size: 48,
-                                      color: AppColors.mutedColor
-                                          .withOpacity(0.3),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      'لا توجد طلبات بعد',
-                                      style: TextStyle(
-                                        color: AppColors.creamMuted,
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'ستظهر الطلبات الجديدة هنا تلقائياً',
-                                      style: TextStyle(
-                                        color: AppColors.mutedColor,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
+                            if (_recentOrders.isNotEmpty)
+                              TextButton.icon(
+                                onPressed: () => widget.onCardTap('orders'),
+                                icon: Icon(
+                                  LucideIcons.arrowLeft,
+                                  size: 14,
+                                  color: AppColors.warmOrange,
+                                ),
+                                label: Text(
+                                  'عرض الكل',
+                                  style: TextStyle(
+                                    color: AppColors.warmOrange,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                  ),
                                 ),
                               ),
-                            )
-                          : ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              padding: EdgeInsets.zero,
-                              itemCount: _recentOrders.length,
-                              itemBuilder: (_, i) {
-                                return _AnimatedCardWrapper(
-                                  index: i,
-                                  controller: _animController,
-                                  child: OrderCard(
-                                    order: _recentOrders[i],
-                                    onTap: () => widget.onCardTap('orders'),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        _isLoading
+                            ? Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(32.0),
+                                  child: CircularProgressIndicator(
+                                    color: AppColors.warmOrange,
+                                    strokeWidth: 2,
                                   ),
-                                );
-                              },
-                            ),
-                ],
-              ),
+                                ),
+                              )
+                            : _recentOrders.isEmpty
+                                ? Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(32.0),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            LucideIcons.clipboardList,
+                                            size: 48,
+                                            color: AppColors.mutedColor
+                                                .withOpacity(0.3),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            'لا توجد طلبات بعد',
+                                            style: TextStyle(
+                                              color: AppColors.creamMuted,
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'ستظهر الطلبات الجديدة هنا تلقائياً',
+                                            style: TextStyle(
+                                              color: AppColors.mutedColor,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    padding: EdgeInsets.zero,
+                                    itemCount: _recentOrders.length,
+                                    itemBuilder: (_, i) {
+                                      return _AnimatedCardWrapper(
+                                        index: i,
+                                        controller: _animController,
+                                        child: OrderCard(
+                                          order: _recentOrders[i],
+                                          onTap: () => widget.onOrderTap(_recentOrders[i]),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+              ],
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
         ],
       ),
     );

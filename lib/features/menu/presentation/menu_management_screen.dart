@@ -65,6 +65,7 @@ class _MenuManagementView extends StatelessWidget {
                           onTap: () =>
                               context.read<MenuCubit>().selectCategory(c.id),
                           onLongPress: () => _showEditCategoryDialog(context, c),
+                          onDelete: () => _confirmCategoryDelete(context, c),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -156,6 +157,34 @@ class _MenuManagementView extends StatelessWidget {
         onPressed: () => _showAddItemDialog(context),
         icon: const Icon(Icons.add),
         label: Text('إضافة صنف'),
+      ),
+    );
+  }
+
+  void _confirmCategoryDelete(BuildContext context, MenuCategory category) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: AppColors.surfaceDark,
+        title: Text('حذف التصنيف', style: TextStyle(color: AppColors.cream)),
+        content: Text(
+          'هل أنت متأكد من حذف تصنيف "${category.displayName}"؟\nالأصناف التابعة لهذا التصنيف ستبقى موجودة ولكنها ستصبح "غير مصنفة".',
+          style: TextStyle(color: AppColors.creamMuted),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: Text('إلغاء', style: TextStyle(color: AppColors.mutedColor)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              context.read<MenuCubit>().deleteCategory(category.id);
+              Navigator.pop(dialogCtx);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.grillRed),
+            child: const Text('حذف', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }
@@ -393,7 +422,7 @@ class _MenuManagementView extends StatelessWidget {
 
   Future<void> _showEditCategoryDialog(BuildContext context, MenuCategory category) async {
     final cubit = context.read<MenuCubit>();
-    final nameCtrl = TextEditingController(text: category.name);
+    final nameCtrl = TextEditingController(text: category.displayName);
 
     await showDialog(
       context: context,
@@ -443,30 +472,7 @@ class _MenuManagementView extends StatelessWidget {
                   children: [
                     TextButton.icon(
                       onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (dialogCtx) => AlertDialog(
-                            backgroundColor: AppColors.charcoalMedium,
-                            title: Text('حذف التصنيف', style: TextStyle(color: AppColors.cream)),
-                            content: Text('هل أنت متأكد من حذف تصنيف "${category.displayName}"؟ سيبقى الأصناف التابعة له موجودة ولكن بدون تصنيف.',
-                                style: TextStyle(color: AppColors.creamMuted)),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(dialogCtx),
-                                child: Text('إلغاء', style: TextStyle(color: AppColors.mutedColor)),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  cubit.deleteCategory(category.id);
-                                  Navigator.pop(dialogCtx);
-                                  Navigator.pop(context); // Close edit dialog
-                                },
-                                style: ElevatedButton.styleFrom(backgroundColor: AppColors.grillRed),
-                                child: const Text('حذف', style: TextStyle(color: Colors.white)),
-                              ),
-                            ],
-                          ),
-                        );
+                        _confirmCategoryDelete(context, category);
                       },
                       style: TextButton.styleFrom(
                         foregroundColor: AppColors.grillRed,
@@ -487,7 +493,11 @@ class _MenuManagementView extends StatelessWidget {
                         ElevatedButton.icon(
                           onPressed: () {
                             if (nameCtrl.text.trim().isEmpty) return;
-                            cubit.updateCategory(category.copyWith(name: nameCtrl.text.trim()));
+                            final newName = nameCtrl.text.trim();
+                            cubit.updateCategory(category.copyWith(
+                              name: newName,
+                              nameAr: newName,
+                            ));
                             Navigator.pop(context);
                           },
                           icon: const Icon(Icons.check_circle_outline, size: 18),
@@ -822,12 +832,14 @@ class _CategoryFilterChip extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
+  final VoidCallback? onDelete;
 
   const _CategoryFilterChip({
     required this.text,
     required this.selected,
     required this.onTap,
     this.onLongPress,
+    this.onDelete,
   });
 
   @override
@@ -838,7 +850,23 @@ class _CategoryFilterChip extends StatelessWidget {
       child: GestureDetector(
         onLongPress: onLongPress,
         child: ChoiceChip(
-          label: Text(text),
+          label: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(text),
+              if (onDelete != null && selected) ...[
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: onDelete,
+                  child: const Icon(
+                    Icons.close,
+                    size: 14,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ],
+          ),
           selected: selected,
           selectedColor: AppColors.warmOrange,
           backgroundColor: AppColors.surfaceDark,

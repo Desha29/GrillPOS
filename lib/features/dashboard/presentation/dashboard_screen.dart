@@ -49,6 +49,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         title: "لوحة التحكم",
         screen: DashboardHome(
           onCardTap: (id) => handleCardTap(id),
+          onOrderTap: (order) {
+            // Navigate to orders and select the order? 
+            // For now, let's just go to orders screen
+            handleCardTap('orders');
+          },
           isManager: curUser.userType == UserType.manager,
         ),
       ),

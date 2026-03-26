@@ -8,6 +8,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/di/dependency_injection.dart';
 import '../data/reports_repository.dart';
+import '../../../core/components/custom_date_range_picker.dart';
 import 'cubit/reports_cubit.dart';
 
 class ReportsScreen extends StatelessWidget {
@@ -112,39 +113,36 @@ class _ReportsView extends StatelessWidget {
                   ),
                 if (state.summary != null ||
                     (state.summary == null && !state.loading))
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                    child: _buildStatsGrid(
+                        context, state.summary, state.topItems.length),
+                  ),
+                const SizedBox(height: AppSpacing.md),
+                if (state.summary != null ||
+                    (state.summary == null && !state.loading))
                   Expanded(
-                    child: Column(
+                    child: ListView(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg),
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                          child: _buildStatsGrid(
-                              context, state.summary, state.topItems.length),
+                        _ChartCard(
+                          title: 'اتجاه الإيرادات (آخر 7 أيام)',
+                          subtitle: 'متابعة النمو اليومي للمبيعات',
+                          child: SizedBox(
+                              height: 240,
+                              child: _TrendChart(points: state.trend)),
                         ),
-                        const SizedBox(height: AppSpacing.lg),
-                        Expanded(
-                          child: ListView(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.lg),
-                            children: [
-                              _ChartCard(
-                                title: 'اتجاه الإيرادات (آخر 7 أيام)',
-                                subtitle: 'متابعة النمو اليومي للمبيعات',
-                                child: SizedBox(
-                                    height: 240,
-                                    child: _TrendChart(points: state.trend)),
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                              _ChartCard(
-                                title: 'الأصناف الأكثر مبيعاً',
-                                subtitle: 'ترتيب الأصناف حسب كمية الطلب',
-                                child: SizedBox(
-                                    height: 240,
-                                    child: _TopItemsChart(items: state.topItems)),
-                              ),
-                              const SizedBox(height: AppSpacing.xl),
-                            ],
-                          ),
+                        const SizedBox(height: AppSpacing.md),
+                        _ChartCard(
+                          title: 'الأصناف الأكثر مبيعاً',
+                          subtitle: 'ترتيب الأصناف حسب كمية الطلب',
+                          child: SizedBox(
+                              height: 240,
+                              child: _TopItemsChart(items: state.topItems)),
                         ),
+                        const SizedBox(height: AppSpacing.xl),
                       ],
                     ),
                   ),
@@ -157,24 +155,10 @@ class _ReportsView extends StatelessWidget {
   }
 
   void _handleCustomRange(BuildContext context) async {
-    final DateTimeRange? picked = await showDateRangePicker(
+    final DateTimeRange? picked = await CustomDateRangePicker.show(
       context: context,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.dark(
-              primary: AppColors.warmOrange,
-              onPrimary: Colors.white,
-              surface: AppColors.charcoalMedium,
-              onSurface: AppColors.cream,
-            ),
-            dialogBackgroundColor: AppColors.charcoalDark,
-          ),
-          child: child!,
-        );
-      },
     );
 
     if (picked != null) {
@@ -193,8 +177,8 @@ class _ReportsView extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        final crossAxisCount = width > 1200 ? 4 : width > 600 ? 2 : 1;
-        final childAspectRatio = width > 1200 ? 2.0 : width > 600 ? 2.2 : 3.5;
+        final crossAxisCount = width > 1100 ? 4 : width > 600 ? 2 : 2;
+        final childAspectRatio = width > 1100 ? 2.2 : width > 600 ? 2.2 : 1.3;
         return GridView.count(
           crossAxisCount: crossAxisCount,
           crossAxisSpacing: AppSpacing.md,
