@@ -1,217 +1,107 @@
-# GrillPOS
+# <p align="center"><img src="assets/images/grillpos/logo_full.png" alt="GrillPOS Logo" width="400"></p>
 
-🔥 Professional Restaurant Point of Sale System
-
-GrillPOS is a modern desktop POS system designed specifically for grill restaurants such as kebab, kofta, and grilled chicken shops.
-
-The system provides a fast cashier workflow, table management, menu control, and daily reporting — all running locally without requiring internet access.
-
-GrillPOS is optimized for busy restaurants that need a reliable and simple cashier system.
-
----
-
-# Overview
-
-GrillPOS helps restaurant owners manage their daily operations efficiently.
-
-The system includes tools for:
-
-• Creating and managing orders  
-• Managing restaurant tables  
-• Organizing menu items  
-• Tracking daily sales  
-• Generating receipts  
-• Monitoring restaurant performance  
-
-The interface is designed to be **fast, simple, and touch-friendly** for cashiers.
+<p align="center">
+  <img src="https://img.shields.io/badge/Flutter-3.6.1-02569B?logo=flutter&logoColor=white" alt="Flutter Badge">
+  <img src="https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white" alt="Dart Badge">
+  <img src="https://img.shields.io/badge/SQLite-Offline--First-003B57?logo=sqlite&logoColor=white" alt="SQLite Badge">
+  <img src="https://img.shields.io/badge/Platform-Windows%20|%20Android%20|%20iOS-orange?style=flat-square" alt="Platform Badge">
+  <img src="https://img.shields.io/badge/SaaS-Ready-green?style=flat-square" alt="SaaS Badge">
+</p>
 
 ---
 
-# Features
+**GrillPOS** is a high-performance, modern SaaS-ready Point of Sale system specifically tailored for grill restaurants and high-traffic food establishments. Built with Flutter, it offers a seamless, premium experience across desktop and mobile devices with a focus on speed, reliability, and rich aesthetics.
 
-## POS Sales Interface
+## ✨ Key Features
 
-Fast and simple cashier workflow.
+### 🏢 Advanced Point of Sale
+*   **Intuitive Interface**: Large, touch-friendly food cards with quick-action buttons.
+*   **Dynamic Filtering**: Smooth horizontal category scrolling with full mouse and touch support.
+*   **Real-time Cart**: Instant subtotal calculations, tax handling, and weight-based quantity support (e.g., 0.5kg).
+*   **Arabic/English Support**: Full RTL (Right-to-Left) support with localized category and item management.
 
-Features include:
+### 📊 Powerful Dashboard & Business Intelligence
+*   **Pinned Summaries**: Fixed statistics cards (Revenue, Orders, Occupancy) that stay in view while scrolling through recent operations.
+*   **Responsive Layout**: Adaptive 4-column grid for desktop views, optimized for 1080p and higher resolutions.
+*   **Advanced Analytics**: Visualize sales trends, top-selling items, and peak hours using interactive `FL Charts`.
+*   **Custom Reporting**: Powerful date-range filtering with a premium, rounded modal interface.
 
-• Large food item buttons  
-• Quick order creation  
-• Real-time cart updates  
-• Quantity editing  
-• Instant checkout  
+### 🪑 Table & Order Management
+*   **Visual Table Grid**: Real-time status monitoring (Available, Occupied, Reserved, Cleaning).
+*   **Order Lifecycle**: Track orders from "Pending" to "Served" and "Completed".
+*   **Localized Table ID**: Unified Arabic labeling ("طاولة") across the system.
 
-Example menu items:
-
-- Kebab
-- Kofta
-- Grilled Chicken
-- Shish Tawook
-- Rice
-- Salad
-- Bread
-
----
-
-## Table Management
-
-Manage restaurant tables visually.
-
-Each table shows:
-
-• Table number  
-• Table status (Available / Occupied)  
-• Active order  
-
-Cashiers can open orders directly from the table screen.
+### 🛠️ Technical Excellence
+*   **Architecture**: Robust implementation using **BLoC/Cubit** for state management and **GetIt** for dependency injection.
+*   **Offline-First**: Reliable SQLite persistence ensuring your business never stops, even without internet.
+*   **Clean Code**: Decoupled features following standard Clean Architecture patterns.
+*   **SaaS Ready**: Designed with multi-tenancy and restaurant ID isolation in mind.
 
 ---
 
-## Order Management
+## 🎨 Professional Aesthetics
 
-Track all restaurant orders easily.
-
-Each order contains:
-
-• Order number  
-• Table number  
-• Ordered items  
-• Quantities  
-• Total price  
-• Order time  
-
-Orders can be viewed in history for review.
+GrillPOS isn't just a tool; it's a visual statement.
+*   **Dark Mode**: Sleek Charcoal and Surface Dark themes for eye-comfort in low-light restaurant environments.
+*   **Vibrant Branding**: Warm Orange and Ember accents that reflect the energy of a grill-based kitchen.
+*   **Micro-animations**: Smooth transitions and hover effects for a premium software feel.
 
 ---
 
-## Receipt Printing
+## 🚀 Tech Stack
 
-Supports **80mm thermal printers** commonly used in restaurants.
-
-Receipt includes:
-
-• Restaurant name  
-• Order number  
-• Items ordered  
-• Quantities  
-• Total price  
-• Date and time  
+*   **Framework**: [Flutter](https://flutter.dev) (Desktop & Mobile)
+*   **State Management**: [flutter_bloc](https://pub.dev/packages/flutter_bloc)
+*   **Database**: [SQLite](https://www.sqlite.org) (via `sqflite_common_ffi`)
+*   **UI Icons**: [Lucide Icons](https://lucideicons.com)
+*   **Charts**: [fl_chart](https://pub.dev/packages/fl_chart)
+*   **PDF/Printing**: [pdf](https://pub.dev/packages/pdf) & [printing](https://pub.dev/packages/printing)
 
 ---
 
-## Reports
+## 📂 Project Structure
 
-Managers can view important sales data such as:
-
-• Daily revenue  
-• Total orders  
-• Best selling dishes  
-• Sales summaries  
-
-These reports help understand restaurant performance.
-
----
-
-## User Roles
-
-GrillPOS supports two user roles.
-
-### Manager
-
-Full access to system features:
-
-• Reports  
-• Settings  
-• User management  
-• System configuration  
-
-### Cashier
-
-Limited access for daily operation:
-
-• Create orders  
-• View invoices  
-• Manage tables  
-
----
-
-# Offline First System
-
-GrillPOS works **completely offline** using a local database.
-
-Benefits:
-
-• No internet required  
-• Faster performance  
-• Reliable operation  
-• Local data storage  
-
-The database is automatically created on the first run.
-
----
-
-# Technology Stack
-
-Framework: Flutter Desktop  
-Language: Dart  
-Database: SQLite  
-State Management: Bloc / Cubit  
-Charts: fl_chart  
-Printing: pdf & printing packages  
-Dependency Injection: GetIt
-
----
-
-# Project Structure
-
-The project follows **Clean Architecture**.
+```text
 lib/
 ├── core/
-│ ├── components/
-│ ├── constants/
-│ ├── services/
-│ ├── theme/
-│ └── utils/
-│
+│   ├── components/       # Reusable UI widgets (Stat Cards, Headers, etc.)
+│   ├── constants/        # Design system tokens (Colors, Spacing)
+│   ├── data/             # Core services (SQLite, Persistence)
+│   └── di/               # Dependency Injection setup
 ├── features/
-│ ├── auth/
-│ ├── dashboard/
-│ ├── pos/
-│ ├── orders/
-│ ├── tables/
-│ ├── menu/
-│ ├── reports/
-│ └── settings/
-│
+│   ├── dashboard/        # Pinned stats & recent operations
+│   ├── pos/             # Core sales interface
+│   ├── menu/            # Localized category & item control
+│   ├── reports/         # BI tools & custom date filtering
+│   └── orders/          # Lifecycle tracking
 └── main.dart
-
-
-This structure improves:
-
-• code organization  
-• scalability  
-• maintainability  
+```
 
 ---
 
-# Screens
+## ⚙️ Installation & Development
 
-Main screens included in the system:
+### Prerequisites
+*   Flutter SDK (^3.6.1)
+*   Desktop development tools for Windows/macOS/Linux
+*   SQLite library installed on the target system
 
-• Login Screen  
-• Dashboard  
-• POS Sales Screen  
-• Tables Screen  
-• Orders Screen  
-• Reports Dashboard  
-• Settings Screen  
+### Run Locally
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/grill_pos.git
+
+# Install dependencies
+flutter pub get
+
+# Run the app
+flutter run -d windows # or android/ios
+```
 
 ---
 
-# Installation
+## 📄 License
 
-## Requirements
+Distributed under the MIT License. See `LICENSE` for more information.
 
-• Windows 10 or later  
-• Flutter SDK  
-• Visual Studio with Desktop C++ tools  
+<p align="right">(<a href="#top">back to top</a>)</p>
