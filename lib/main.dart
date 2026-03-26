@@ -8,6 +8,8 @@ import 'package:window_manager/window_manager.dart';
 import 'package:screen_retriever/screen_retriever.dart';
 import 'dart:io';
 import 'dart:async';
+import 'package:device_preview/device_preview.dart';
+import 'package:flutter/foundation.dart';
 
 import 'core/constants/bloc_observer.dart';
 import 'core/di/dependency_injection.dart';
@@ -38,17 +40,14 @@ Future<void> _initializePersistenceSystem() async {
           source: 'Init');
 
       try {
-        final settings =
-            await PersistenceInitializer.settingsRepository!.getStoreSettings();
+        final settings = await PersistenceInitializer.settingsRepository!
+            .getRestaurantSettings();
 
-        FileLogger.info('Settings loaded: ${settings.storeName}',
+        FileLogger.info('Settings loaded: ${settings.restaurantName}',
             source: 'Init');
       } catch (e) {
         FileLogger.warning('Settings error', error: e, source: 'Init');
       }
-
- 
-    
 
       await RecoveryService().check();
 
@@ -118,10 +117,16 @@ void main() async {
         bool fileExists = await File(requiredFilePath).exists();
         if (fileExists) {
           FileLogger.info('App starting normally', source: 'Main');
-          runApp(const MyApp());
+          runApp(DevicePreview(
+            enabled: !kReleaseMode,
+            builder: (context) => const MyApp(),
+          ));
         } else {
           FileLogger.info('App starting in activation mode', source: 'Main');
-          runApp(const ActivationScreen());
+          runApp(DevicePreview(
+            enabled: !kReleaseMode,
+            builder: (contest) => const ActivationScreen(),
+          ));
         }
       } catch (e, stack) {
         FileLogger.critical('Critical startup error',
@@ -187,14 +192,16 @@ class MyApp extends StatelessWidget {
         builder: (context, themeState) {
           return MessageOverlay(
             child: MaterialApp(
+              useInheritedMediaQuery: true,
+              locale: DevicePreview.locale(context),
               navigatorKey: navigatorKey,
               title: 'GrillPOS',
               debugShowCheckedModeBanner: false,
               theme: AppTheme.lightTheme,
               darkTheme: AppTheme.darkTheme,
-              themeMode: themeState.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+              themeMode:
+                  themeState.isDarkMode ? ThemeMode.dark : ThemeMode.light,
               home: const LoginScreen(),
-              locale: const Locale('ar'),
               supportedLocales: const [
                 Locale('ar'),
                 Locale('en'),
@@ -206,6 +213,7 @@ class MyApp extends StatelessWidget {
               ],
               builder: (context, child) {
                 GlobalMessage.initialize(context);
+                final previewChild = DevicePreview.appBuilder(context, child);
 
                 return BlocListener<UserCubit, UserStates>(
                   listener: (context, state) {
@@ -218,7 +226,7 @@ class MyApp extends StatelessWidget {
                   },
                   child: Directionality(
                     textDirection: TextDirection.rtl,
-                    child: child!,
+                    child: previewChild,
                   ),
                 );
               },

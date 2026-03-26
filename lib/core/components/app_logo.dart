@@ -22,12 +22,12 @@ class AppLogo extends StatelessWidget {
     return BlocBuilder<SettingsCubit, SettingsStates>(
       bloc: getIt<SettingsCubit>(),
       builder: (context, state) {
-        final storeInfo = getIt<SettingsCubit>().currentStoreInfo;
+        final restaurantInfo = getIt<SettingsCubit>().currentRestaurantInfo;
 
-        if (storeInfo != null &&
-            storeInfo.logoPath != null &&
-            storeInfo.logoPath!.isNotEmpty) {
-          final file = File(storeInfo.logoPath!);
+        if (restaurantInfo != null &&
+            restaurantInfo.logoPath != null &&
+            restaurantInfo.logoPath!.isNotEmpty) {
+          final file = File(restaurantInfo.logoPath!);
           if (file.existsSync()) {
             return Image.file(
               file,

@@ -1,6 +1,6 @@
 // settings_states.dart
 
-import '../../data/models/store_info_model.dart';
+import '../../data/models/restaurant_info_model.dart';
 
 abstract class SettingsStates {}
 
@@ -8,17 +8,17 @@ class SettingsInitial extends SettingsStates {}
 
 class SettingsLoading extends SettingsStates {}
 
-class StoreInfoLoaded extends SettingsStates {
-  final StoreInfo storeInfo;
-  StoreInfoLoaded(this.storeInfo);
+class RestaurantInfoLoaded extends SettingsStates {
+  final RestaurantInfo restaurantInfo;
+  RestaurantInfoLoaded(this.restaurantInfo);
 }
 
-class StoreInfoUpdateSuccess extends SettingsStates {
+class RestaurantInfoUpdateSuccess extends SettingsStates {
   final String message;
-  StoreInfoUpdateSuccess(this.message);
+  RestaurantInfoUpdateSuccess(this.message);
 }
 
-class StoreInfoUpdateFailure extends SettingsStates {
+class RestaurantInfoUpdateFailure extends SettingsStates {
   final String message;
-  StoreInfoUpdateFailure(this.message);
+  RestaurantInfoUpdateFailure(this.message);
 }

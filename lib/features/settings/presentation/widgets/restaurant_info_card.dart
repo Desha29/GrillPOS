@@ -1,4 +1,4 @@
-// store_info_card.dart
+// restaurant_info_card.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -7,15 +7,15 @@ import 'package:grill_pos/core/components/app_logo.dart';
 import '../../../../core/components/section_card.dart';
 
 import '../../../../core/functions/messege.dart';
-import '../../data/models/store_info_model.dart';
+import '../../data/models/restaurant_info_model.dart';
 import '../cubit/settings_cubit.dart';
 import '../cubit/settings_states.dart';
-import 'edit_store_info_dialog.dart';
+import 'edit_restaurant_info_dialog.dart';
 
 import 'package:grill_pos/core/constants/app_colors.dart';
 
-class StoreInfoCard extends StatelessWidget {
-  const StoreInfoCard({
+class RestaurantInfoCard extends StatelessWidget {
+  const RestaurantInfoCard({
     super.key,
     required this.isMobile,
   });
@@ -28,9 +28,9 @@ class StoreInfoCard extends StatelessWidget {
 
     return BlocConsumer<SettingsCubit, SettingsStates>(
       listener: (context, state) {
-        if (state is StoreInfoUpdateSuccess) {
+        if (state is RestaurantInfoUpdateSuccess) {
           MotionSnackBarSuccess(context, state.message);
-        } else if (state is StoreInfoUpdateFailure) {
+        } else if (state is RestaurantInfoUpdateFailure) {
           MotionSnackBarError(context, state.message);
         }
       },
@@ -38,14 +38,14 @@ class StoreInfoCard extends StatelessWidget {
         final cubit = SettingsCubit.get(context);
         final isLoading = state is SettingsLoading;
 
-        StoreInfo? store;
-        if (state is StoreInfoLoaded) {
-          store = state.storeInfo;
+        RestaurantInfo? restaurant;
+        if (state is RestaurantInfoLoaded) {
+          restaurant = state.restaurantInfo;
         } else if (!isLoading) {
           try {
-            store = cubit.currentStoreInfo;
+            restaurant = cubit.currentRestaurantInfo;
           } catch (e) {
-            store = null;
+            restaurant = null;
           }
         }
 
@@ -70,11 +70,12 @@ class StoreInfoCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  if (cubit.isAdmin() && store != null)
+                  if (cubit.isAdmin() && restaurant != null)
                     IconButton(
                       onPressed: isLoading
                           ? null
-                          : () => _showEditDialog(context, store!.toMap()),
+                          : () => _showEditDialog(
+                              context, restaurant!.toMap()),
                       icon: const Icon(LucideIcons.edit2, size: 16),
                       tooltip: 'تعديل معلومات المطعم',
                     ),
@@ -88,7 +89,7 @@ class StoreInfoCard extends StatelessWidget {
                     child: CircularProgressIndicator(),
                   ),
                 )
-              else if (store != null)
+              else if (restaurant != null)
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final isWide = constraints.maxWidth > 700;
@@ -105,7 +106,7 @@ class StoreInfoCard extends StatelessWidget {
                               ),
                               if (cubit.isAdmin())
                                 GestureDetector(
-                                  onTap: () => _pickImage(context, store!),
+                                  onTap: () => _pickImage(context, restaurant!),
                                   child: Container(
                                     padding: const EdgeInsets.all(6),
                                     decoration: BoxDecoration(
@@ -127,30 +128,30 @@ class StoreInfoCard extends StatelessWidget {
                             spacing: 16,
                             runSpacing: 12,
                             children: [
-                              _StoreInfoRow(
+                              _RestaurantInfoRow(
                                   icon: LucideIcons.chefHat,
                                   label: 'اسم المطعم',
-                                  value: store!.name,
+                                  value: restaurant!.name,
                                   theme: theme),
-                              _StoreInfoRow(
+                              _RestaurantInfoRow(
                                   icon: LucideIcons.mapPin,
                                   label: 'العنوان',
-                                  value: store.address,
+                                  value: restaurant.address,
                                   theme: theme),
-                              _StoreInfoRow(
+                              _RestaurantInfoRow(
                                   icon: LucideIcons.phone,
                                   label: 'رقم الهاتف',
-                                  value: store.phone,
+                                  value: restaurant.phone,
                                   theme: theme),
-                              _StoreInfoRow(
+                              _RestaurantInfoRow(
                                   icon: LucideIcons.mail,
                                   label: 'البريد الإلكتروني',
-                                  value: store.email,
+                                  value: restaurant.email,
                                   theme: theme),
-                              _StoreInfoRow(
+                              _RestaurantInfoRow(
                                   icon: LucideIcons.fileText,
                                   label: 'الرقم الضريبي',
-                                  value: store.vat,
+                                  value: restaurant.vat,
                                   theme: theme),
                             ]
                                 .map((row) => SizedBox(
@@ -161,30 +162,30 @@ class StoreInfoCard extends StatelessWidget {
                         else
                           Column(
                             children: [
-                              _StoreInfoRow(
+                              _RestaurantInfoRow(
                                   icon: LucideIcons.chefHat,
                                   label: 'اسم المطعم',
-                                  value: store!.name,
+                                  value: restaurant!.name,
                                   theme: theme),
-                              _StoreInfoRow(
+                              _RestaurantInfoRow(
                                   icon: LucideIcons.mapPin,
                                   label: 'العنوان',
-                                  value: store.address,
+                                  value: restaurant.address,
                                   theme: theme),
-                              _StoreInfoRow(
+                              _RestaurantInfoRow(
                                   icon: LucideIcons.phone,
                                   label: 'رقم الهاتف',
-                                  value: store.phone,
+                                  value: restaurant.phone,
                                   theme: theme),
-                              _StoreInfoRow(
+                              _RestaurantInfoRow(
                                   icon: LucideIcons.mail,
                                   label: 'البريد الإلكتروني',
-                                  value: store.email,
+                                  value: restaurant.email,
                                   theme: theme),
-                              _StoreInfoRow(
+                              _RestaurantInfoRow(
                                   icon: LucideIcons.fileText,
                                   label: 'الرقم الضريبي',
-                                  value: store.vat,
+                                  value: restaurant.vat,
                                   theme: theme),
                             ]
                                 .map((row) => Padding(
@@ -210,18 +211,20 @@ class StoreInfoCard extends StatelessWidget {
     );
   }
 
-  void _showEditDialog(BuildContext context, Map<String, String> store) async {
+  void _showEditDialog(
+      BuildContext context, Map<String, String> restaurant) async {
     final result = await showDialog<Map<String, String>>(
       context: context,
-      builder: (dialogContext) => EditStoreInfoDialog(storeInfo: store),
+      builder: (dialogContext) =>
+          EditRestaurantInfoDialog(restaurantInfo: restaurant),
     );
 
     if (result != null && context.mounted) {
-      SettingsCubit.get(context).updateStoreInfo(result);
+      SettingsCubit.get(context).updateRestaurantInfo(result);
     }
   }
 
-  void _pickImage(BuildContext context, StoreInfo currentInfo) async {
+  void _pickImage(BuildContext context, RestaurantInfo currentInfo) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.image,
@@ -234,7 +237,7 @@ class StoreInfoCard extends StatelessWidget {
         updatedMap['logoPath'] = newPath;
 
         if (context.mounted) {
-          SettingsCubit.get(context).updateStoreInfo(updatedMap);
+          SettingsCubit.get(context).updateRestaurantInfo(updatedMap);
         }
       }
     } catch (e) {
@@ -245,8 +248,8 @@ class StoreInfoCard extends StatelessWidget {
   }
 }
 
-class _StoreInfoRow extends StatelessWidget {
-  const _StoreInfoRow({
+class _RestaurantInfoRow extends StatelessWidget {
+  const _RestaurantInfoRow({
     required this.icon,
     required this.label,
     required this.value,

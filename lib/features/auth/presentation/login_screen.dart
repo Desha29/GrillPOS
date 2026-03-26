@@ -16,7 +16,6 @@ import '../../../core/data/services/persistence_initializer.dart';
 
 import '../../dashboard/presentation/dashboard_screen.dart';
 
-import '../../settings/presentation/cubit/settings_cubit.dart';
 import 'cubit/user_cubit.dart';
 import 'cubit/user_states.dart';
 
@@ -54,17 +53,23 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final isTablet = screenWidth >= 600 && screenWidth < 1000;
+
     int crossAxisCount = 3;
     double childAspectRatio = 1.1;
 
-    if (screenWidth < 900) {
+    if (isTablet) {
       crossAxisCount = 2;
       childAspectRatio = 1.0;
     }
-    if (screenWidth < 600) {
+    if (isMobile) {
       crossAxisCount = 1;
-      childAspectRatio = 1.1;
+      childAspectRatio = 3.5;
     }
+
+    final logoRadius = isMobile ? 55.0 : isTablet ? 70.0 : 90.0;
+    final titleFontSize = isMobile ? 18.0 : isTablet ? 22.0 : 26.0;
 
     return BlocProvider<UserCubit>.value(
       value: getIt<UserCubit>(),
@@ -110,90 +115,114 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
             ),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 800),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 32),
-                    const Logo(isMobile: false, avatarRadius: 90),
-                    const SizedBox(height: 24),
-
-                    Text(
-                      'اختر المستخدم لتسجيل الدخول',
-                      style:
-                          Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.cream,
-                              ),
-                    ),
-                    const SizedBox(height: 24),
-                    Expanded(
-                      child: BlocBuilder<UserCubit, UserStates>(
-                        builder: (context, state) {
-                          if (state is UserLoading) {
-                            return const Center(
-                                child: CircularProgressIndicator());
-                          } else if (state is UsersLoaded) {
-                            if (state.users.isEmpty) {
-                              return Center(
-                                  child: Text(
-                                "لا يوجد مستخدمين. يرجى إضافة مستخدم أولاً.",
-                                style:
-                                    TextStyle(color: AppColors.creamMuted),
-                              ));
-                            }
-                            return GridView.builder(
-                              padding: const EdgeInsets.all(20),
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: crossAxisCount,
-                                crossAxisSpacing: 16,
-                                mainAxisSpacing: 16,
-                                childAspectRatio: childAspectRatio,
-                              ),
-                              itemCount: state.users.length,
-                              itemBuilder: (context, index) {
-                                final user = state.users[index];
-                                return _LoginUserCard(
-                                  user: user,
-                                  index: index,
-                                  onTap: () => _showPasswordDialog(context, user),
-                                );
-                              },
-                            );
-                          } else if (state is UserFailure) {
-                            return Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(state.error,
-                                      style: TextStyle(
-                                          color: AppColors.grillRed)),
-                                  const SizedBox(height: 10),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      UserCubit.get(context).getAllUsers();
-                                    },
-                                    child: const Text("إعادة المحاولة"),
-                                  )
-                                ],
-                              ),
-                            );
-                          }
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        },
+            child: SafeArea(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 900),
+                  child: Column(
+                    children: [
+                      SizedBox(height: isMobile ? 16 : 32),
+                      Logo(isMobile: isMobile, avatarRadius: logoRadius),
+                      SizedBox(height: isMobile ? 12 : 24),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'اختر المستخدم لتسجيل الدخول',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.cream,
+                              fontSize: titleFontSize,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      '© 2026 GrillPOS. جميع الحقوق محفوظة.',
-                      style: TextStyle(color: AppColors.mutedColor),
-                    ),
-                    const SizedBox(height: 10),
-                  ],
+                      SizedBox(height: isMobile ? 12 : 24),
+                      Expanded(
+                        child: BlocBuilder<UserCubit, UserStates>(
+                          builder: (context, state) {
+                            if (state is UserLoading) {
+                              return Center(
+                                  child: CircularProgressIndicator(
+                                      color: AppColors.warmOrange));
+                            } else if (state is UsersLoaded) {
+                              if (state.users.isEmpty) {
+                                return Center(
+                                    child: Text(
+                                  "لا يوجد مستخدمين. يرجى إضافة مستخدم أولاً.",
+                                  style:
+                                      TextStyle(color: AppColors.creamMuted),
+                                ));
+                              }
+                              return GridView.builder(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: isMobile ? 16 : 20,
+                                  vertical: isMobile ? 8 : 20,
+                                ),
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: crossAxisCount,
+                                  crossAxisSpacing: isMobile ? 10 : 16,
+                                  mainAxisSpacing: isMobile ? 10 : 16,
+                                  childAspectRatio: childAspectRatio,
+                                ),
+                                itemCount: state.users.length,
+                                itemBuilder: (context, index) {
+                                  final user = state.users[index];
+                                  if (isMobile) {
+                                    return _LoginUserListTile(
+                                      user: user,
+                                      onTap: () => _showPasswordDialog(context, user),
+                                    );
+                                  }
+                                  return _LoginUserCard(
+                                    user: user,
+                                    index: index,
+                                    onTap: () => _showPasswordDialog(context, user),
+                                  );
+                                },
+                              );
+                            } else if (state is UserFailure) {
+                              return Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(state.error,
+                                        style: TextStyle(
+                                            color: AppColors.grillRed)),
+                                    const SizedBox(height: 10),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        UserCubit.get(context).getAllUsers();
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.warmOrange,
+                                      ),
+                                      child: const Text("إعادة المحاولة",
+                                          style: TextStyle(color: Colors.white)),
+                                    )
+                                  ],
+                                ),
+                              );
+                            }
+                            return Center(
+                                child: CircularProgressIndicator(
+                                    color: AppColors.warmOrange));
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                            vertical: isMobile ? 8 : 16),
+                        child: Text(
+                          '© 2026 GrillPOS. جميع الحقوق محفوظة.',
+                          style: TextStyle(
+                              color: AppColors.mutedColor, fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -206,6 +235,11 @@ class _LoginScreenState extends State<LoginScreen> {
   void _showPasswordDialog(BuildContext context, User user) {
     final passwordController = TextEditingController();
     bool isPasswordVisible = false;
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final dialogPadding = isMobile ? 20.0 : 32.0;
+    final avatarSize = isMobile ? 60.0 : 80.0;
+    final avatarFontSize = isMobile ? 24.0 : 32.0;
+    final nameFontSize = isMobile ? 20.0 : 26.0;
 
     showDialog(
       context: context,
@@ -216,232 +250,240 @@ class _LoginScreenState extends State<LoginScreen> {
                 borderRadius: BorderRadius.circular(AppSpacing.dialogRadius)),
             elevation: 0,
             backgroundColor: Colors.transparent,
-            child: Container(
-              width: 380,
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: AppColors.charcoalMedium,
-                borderRadius:
-                    BorderRadius.circular(AppSpacing.dialogRadius),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.warmOrange.withOpacity(0.08),
-                    blurRadius: 32,
-                    offset: const Offset(0, 16),
+            insetPadding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 16 : 40,
+              vertical: 24,
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: SingleChildScrollView(
+                child: Container(
+                  padding: EdgeInsets.all(dialogPadding),
+                  decoration: BoxDecoration(
+                    color: AppColors.charcoalMedium,
+                    borderRadius:
+                        BorderRadius.circular(AppSpacing.dialogRadius),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.warmOrange.withOpacity(0.08),
+                        blurRadius: 32,
+                        offset: const Offset(0, 16),
+                      ),
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                    border: Border.all(
+                        color: AppColors.borderColor, width: 1),
                   ),
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-                border: Border.all(
-                    color: AppColors.borderColor, width: 1),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Elegant Avatar
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          AppColors.warmOrange.withOpacity(0.2),
-                          AppColors.charcoalLight.withOpacity(0.3),
-                        ],
-                      ),
-                      border: Border.all(
-                        color: AppColors.warmOrange.withOpacity(0.4),
-                        width: 3,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.warmOrange.withOpacity(0.15),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Text(
-                        user.name.isNotEmpty
-                            ? user.name[0].toUpperCase()
-                            : "?",
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.warmOrange,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  // Greetings
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.warmOrange.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      "مرحباً بك مجدداً",
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.warmOrange,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    user.name,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.cream,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  // Input Field
-                  TextField(
-                    controller: passwordController,
-                    obscureText: !isPasswordVisible,
-                    autofocus: true,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 3,
-                      color: AppColors.cream,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: "••••••••",
-                      hintStyle: TextStyle(
-                        fontSize: 18,
-                        letterSpacing: 3,
-                        color: AppColors.mutedColor.withOpacity(0.4),
-                      ),
-                      filled: true,
-                      fillColor: AppColors.charcoalDark,
-                      prefixIcon: Padding(
-                        padding: const EdgeInsets.only(right: 12.0),
-                        child: Icon(LucideIcons.keyRound,
-                            color: AppColors.warmOrange, size: 22),
-                      ),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          isPasswordVisible
-                              ? LucideIcons.eye
-                              : LucideIcons.eyeOff,
-                          color: AppColors.mutedColor,
-                          size: 22,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            isPasswordVisible = !isPasswordVisible;
-                          });
-                        },
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 20),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppSpacing.inputRadius),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppSpacing.inputRadius),
-                        borderSide: BorderSide(
-                            color: AppColors.borderColor, width: 1),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppSpacing.inputRadius),
-                        borderSide: BorderSide(
-                            color: AppColors.warmOrange, width: 2),
-                      ),
-                    ),
-                    onSubmitted: (_) {
-                      Navigator.pop(dialogContext);
-                      _attemptLogin(
-                          context, user.username, passwordController.text);
-                    },
-                  ),
-                  const SizedBox(height: 40),
-                  // Action Buttons
-                  Row(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(dialogContext),
-                          style: OutlinedButton.styleFrom(
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 18),
-                            side: BorderSide(
-                                color: AppColors.borderColor, width: 1),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                  AppSpacing.buttonRadius),
-                            ),
-                          ),
-                          child: Text(
-                            "إلغاء",
-                            style: TextStyle(
-                              color: AppColors.mutedColor,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        flex: 2,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(dialogContext);
-                            _attemptLogin(context, user.username,
-                                passwordController.text);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.warmOrange,
-                            foregroundColor: Colors.white,
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 18),
-                            elevation: 4,
-                            shadowColor:
-                                AppColors.warmOrange.withOpacity(0.4),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                  AppSpacing.buttonRadius),
-                            ),
-                          ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "دخول",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              SizedBox(width: 8),
-                              Icon(LucideIcons.logIn, size: 20),
+                      // Elegant Avatar
+                      Container(
+                        width: avatarSize,
+                        height: avatarSize,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              AppColors.warmOrange.withOpacity(0.2),
+                              AppColors.charcoalLight.withOpacity(0.3),
                             ],
                           ),
+                          border: Border.all(
+                            color: AppColors.warmOrange.withOpacity(0.4),
+                            width: 3,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.warmOrange.withOpacity(0.15),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
                         ),
+                        child: Center(
+                          child: Text(
+                            user.name.isNotEmpty
+                                ? user.name[0].toUpperCase()
+                                : "?",
+                            style: TextStyle(
+                              fontSize: avatarFontSize,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.warmOrange,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: isMobile ? 16 : 24),
+                      // Greetings
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.warmOrange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          "مرحباً بك مجدداً",
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.warmOrange,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        user.name,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: nameFontSize,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.cream,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      SizedBox(height: isMobile ? 20 : 32),
+                      // Input Field
+                      TextField(
+                        controller: passwordController,
+                        obscureText: !isPasswordVisible,
+                        autofocus: true,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: isMobile ? 16 : 18,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 3,
+                          color: AppColors.cream,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: "••••••••",
+                          hintStyle: TextStyle(
+                            fontSize: isMobile ? 16 : 18,
+                            letterSpacing: 3,
+                            color: AppColors.mutedColor.withOpacity(0.4),
+                          ),
+                          filled: true,
+                          fillColor: AppColors.charcoalDark,
+                          prefixIcon: Padding(
+                            padding: const EdgeInsets.only(right: 12.0),
+                            child: Icon(LucideIcons.keyRound,
+                                color: AppColors.warmOrange, size: 20),
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              isPasswordVisible
+                                  ? LucideIcons.eye
+                                  : LucideIcons.eyeOff,
+                              color: AppColors.mutedColor,
+                              size: 20,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                isPasswordVisible = !isPasswordVisible;
+                              });
+                            },
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16, vertical: isMobile ? 14 : 20),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSpacing.inputRadius),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSpacing.inputRadius),
+                            borderSide: BorderSide(
+                                color: AppColors.borderColor, width: 1),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSpacing.inputRadius),
+                            borderSide: BorderSide(
+                                color: AppColors.warmOrange, width: 2),
+                          ),
+                        ),
+                        onSubmitted: (_) {
+                          Navigator.pop(dialogContext);
+                          _attemptLogin(
+                              context, user.username, passwordController.text);
+                        },
+                      ),
+                      SizedBox(height: isMobile ? 24 : 40),
+                      // Action Buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(dialogContext),
+                              style: OutlinedButton.styleFrom(
+                                padding:
+                                    EdgeInsets.symmetric(vertical: isMobile ? 14 : 18),
+                                side: BorderSide(
+                                    color: AppColors.borderColor, width: 1),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      AppSpacing.buttonRadius),
+                                ),
+                              ),
+                              child: Text(
+                                "إلغاء",
+                                style: TextStyle(
+                                  color: AppColors.mutedColor,
+                                  fontSize: isMobile ? 14 : 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(dialogContext);
+                                _attemptLogin(context, user.username,
+                                    passwordController.text);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.warmOrange,
+                                foregroundColor: Colors.white,
+                                padding:
+                                    EdgeInsets.symmetric(vertical: isMobile ? 14 : 18),
+                                elevation: 4,
+                                shadowColor:
+                                    AppColors.warmOrange.withOpacity(0.4),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      AppSpacing.buttonRadius),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "دخول",
+                                    style: TextStyle(
+                                      fontSize: isMobile ? 16 : 18,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Icon(LucideIcons.logIn, size: isMobile ? 18 : 20),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
           );
@@ -661,6 +703,125 @@ class _LoginUserCardState extends State<_LoginUserCard>
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Mobile Login User List Tile ──────────────────────────────────────────
+class _LoginUserListTile extends StatelessWidget {
+  final User user;
+  final VoidCallback onTap;
+
+  const _LoginUserListTile({
+    required this.user,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isManager = user.userType == UserType.manager;
+    final accentColor = isManager ? AppColors.warmOrange : AppColors.ember;
+
+    return Material(
+      color: AppColors.surfaceDark,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.borderColor),
+          ),
+          child: Row(
+            children: [
+              // Avatar
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isManager
+                        ? [
+                            AppColors.warmOrange.withOpacity(0.25),
+                            AppColors.ember.withOpacity(0.15),
+                          ]
+                        : [
+                            AppColors.charcoalLight.withOpacity(0.5),
+                            AppColors.charcoalMedium,
+                          ],
+                  ),
+                  border: Border.all(
+                    color: isManager
+                        ? AppColors.warmOrange.withOpacity(0.5)
+                        : AppColors.borderColor,
+                    width: 2,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: isManager ? AppColors.warmOrange : AppColors.cream,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              // Name + role
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      user.name,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.cream,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          isManager ? LucideIcons.shieldCheck : LucideIcons.user,
+                          size: 12,
+                          color: isManager ? AppColors.warmOrange : AppColors.creamMuted,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          isManager ? 'مدير' : 'كاشير',
+                          style: TextStyle(
+                            color: isManager ? AppColors.warmOrange : AppColors.creamMuted,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Arrow
+              Icon(
+                Icons.arrow_forward_ios,
+                color: accentColor.withOpacity(0.5),
+                size: 16,
+              ),
+            ],
           ),
         ),
       ),

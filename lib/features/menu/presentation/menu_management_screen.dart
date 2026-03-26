@@ -443,8 +443,30 @@ class _MenuManagementView extends StatelessWidget {
                   children: [
                     TextButton.icon(
                       onPressed: () {
-                         cubit.deleteCategory(category.id);
-                         Navigator.pop(context);
+                        showDialog(
+                          context: context,
+                          builder: (dialogCtx) => AlertDialog(
+                            backgroundColor: AppColors.charcoalMedium,
+                            title: Text('حذف التصنيف', style: TextStyle(color: AppColors.cream)),
+                            content: Text('هل أنت متأكد من حذف تصنيف "${category.displayName}"؟ سيبقى الأصناف التابعة له موجودة ولكن بدون تصنيف.',
+                                style: TextStyle(color: AppColors.creamMuted)),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(dialogCtx),
+                                child: Text('إلغاء', style: TextStyle(color: AppColors.mutedColor)),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  cubit.deleteCategory(category.id);
+                                  Navigator.pop(dialogCtx);
+                                  Navigator.pop(context); // Close edit dialog
+                                },
+                                style: ElevatedButton.styleFrom(backgroundColor: AppColors.grillRed),
+                                child: const Text('حذف', style: TextStyle(color: Colors.white)),
+                              ),
+                            ],
+                          ),
+                        );
                       },
                       style: TextButton.styleFrom(
                         foregroundColor: AppColors.grillRed,

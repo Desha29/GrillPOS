@@ -117,9 +117,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     title: BlocBuilder<SettingsCubit, SettingsStates>(
                         bloc: getIt<SettingsCubit>(),
                         builder: (context, state) {
-                          final name =
-                              getIt<SettingsCubit>().currentStoreInfo?.name ??
-                                  'GrillPOS';
+                          final name = getIt<SettingsCubit>()
+                                  .currentRestaurantInfo
+                                  ?.name ??
+                              'GrillPOS';
                           return Text(name.isNotEmpty ? name : 'GrillPOS');
                         }),
                     leading: Builder(

@@ -1,4 +1,4 @@
-// edit_store_info_dialog.dart
+// edit_restaurant_info_dialog.dart
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -6,21 +6,20 @@ import '../../../../core/components/app_logo.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/functions/messege.dart';
 
+class EditRestaurantInfoDialog extends StatefulWidget {
+  final Map<String, String> restaurantInfo;
 
-
-class EditStoreInfoDialog extends StatefulWidget {
-  final Map<String, String> storeInfo;
-
-  const EditStoreInfoDialog({
+  const EditRestaurantInfoDialog({
     super.key,
-    required this.storeInfo,
+    required this.restaurantInfo,
   });
 
   @override
-  State<EditStoreInfoDialog> createState() => _EditStoreInfoDialogState();
+  State<EditRestaurantInfoDialog> createState() =>
+      _EditRestaurantInfoDialogState();
 }
 
-class _EditStoreInfoDialogState extends State<EditStoreInfoDialog> {
+class _EditRestaurantInfoDialogState extends State<EditRestaurantInfoDialog> {
   late final TextEditingController nameCtrl;
   late final TextEditingController phoneCtrl;
   late final TextEditingController emailCtrl;
@@ -28,17 +27,19 @@ class _EditStoreInfoDialogState extends State<EditStoreInfoDialog> {
   late final TextEditingController addressCtrl;
   String? logoPath;
 
-
   @override
   void initState() {
     super.initState();
-    nameCtrl = TextEditingController(text: widget.storeInfo['name'] ?? '');
-    phoneCtrl = TextEditingController(text: widget.storeInfo['phone'] ?? '');
-    emailCtrl = TextEditingController(text: widget.storeInfo['email'] ?? '');
-    vatCtrl = TextEditingController(text: widget.storeInfo['vat'] ?? '');
+    nameCtrl =
+        TextEditingController(text: widget.restaurantInfo['name'] ?? '');
+    phoneCtrl =
+        TextEditingController(text: widget.restaurantInfo['phone'] ?? '');
+    emailCtrl =
+        TextEditingController(text: widget.restaurantInfo['email'] ?? '');
+    vatCtrl = TextEditingController(text: widget.restaurantInfo['vat'] ?? '');
     addressCtrl =
-        TextEditingController(text: widget.storeInfo['address'] ?? '');
-    logoPath = widget.storeInfo['logoPath'];
+        TextEditingController(text: widget.restaurantInfo['address'] ?? '');
+    logoPath = widget.restaurantInfo['logoPath'];
   }
 
   @override
@@ -136,12 +137,18 @@ class _EditStoreInfoDialogState extends State<EditStoreInfoDialog> {
                                   height: 100,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    border: Border.all(color: AppColors.borderColor),
+                                    border:
+                                        Border.all(color: AppColors.borderColor),
                                   ),
                                   child: ClipOval(
-                                    child: logoPath != null && logoPath!.isNotEmpty
-                                        ? Image.file(File(logoPath!), fit: BoxFit.cover)
-                                        : const AppLogo(width: 100, height: 100, fit: BoxFit.cover),
+                                    child: logoPath != null &&
+                                            logoPath!.isNotEmpty
+                                        ? Image.file(File(logoPath!),
+                                            fit: BoxFit.cover)
+                                        : const AppLogo(
+                                            width: 100,
+                                            height: 100,
+                                            fit: BoxFit.cover),
                                   ),
                                 ),
                                 GestureDetector(
@@ -151,7 +158,8 @@ class _EditStoreInfoDialogState extends State<EditStoreInfoDialog> {
                                     decoration: BoxDecoration(
                                       color: AppColors.primaryColor,
                                       shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white, width: 2),
+                                      border: Border.all(
+                                          color: Colors.white, width: 2),
                                     ),
                                     child: const Icon(Icons.camera_alt,
                                         size: 16, color: Colors.white),
@@ -199,7 +207,7 @@ class _EditStoreInfoDialogState extends State<EditStoreInfoDialog> {
                             _buildTextField(
                               nameCtrl,
                               'اسم المطعم *',
-                              Icons.store,
+                              Icons.restaurant,
                             ),
                             const SizedBox(height: 16),
                             _buildTextField(
@@ -318,6 +326,7 @@ class _EditStoreInfoDialogState extends State<EditStoreInfoDialog> {
       ),
     );
   }
+
   Future<void> _pickImage() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(

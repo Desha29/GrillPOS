@@ -35,15 +35,66 @@ class _ReportsView extends StatelessWidget {
             return Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
                   child: ScreenHeader(
                     title: 'التقارير والإحصائيات',
                     subtitle: 'تحليل أداء المبيعات والأصناف الأكثر طلباً',
                     icon: Icons.pie_chart_outline,
                     trailingIcon: Icons.refresh,
-                    onTrailingPressed: () =>
-                        context.read<ReportsCubit>().load(),
+                    onTrailingPressed: () => context.read<ReportsCubit>().load(),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                // Filter chips
+                Container(
+                  height: 50,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                    children: [
+                      _FilterChip(
+                        label: 'اليوم',
+                        filter: ReportFilter.today,
+                        selected: state.currentFilter == ReportFilter.today,
+                        onTap: () => context.read<ReportsCubit>().load(filter: ReportFilter.today),
+                      ),
+                      _FilterChip(
+                        label: 'أمس',
+                        filter: ReportFilter.yesterday,
+                        selected: state.currentFilter == ReportFilter.yesterday,
+                        onTap: () => context.read<ReportsCubit>().load(filter: ReportFilter.yesterday),
+                      ),
+                      _FilterChip(
+                        label: 'آخر 7 أيام',
+                        filter: ReportFilter.week,
+                        selected: state.currentFilter == ReportFilter.week,
+                        onTap: () => context.read<ReportsCubit>().load(filter: ReportFilter.week),
+                      ),
+                      _FilterChip(
+                        label: 'هذا الشهر',
+                        filter: ReportFilter.month,
+                        selected: state.currentFilter == ReportFilter.month,
+                        onTap: () => context.read<ReportsCubit>().load(filter: ReportFilter.month),
+                      ),
+                      _FilterChip(
+                        label: 'هذه السنة',
+                        filter: ReportFilter.year,
+                        selected: state.currentFilter == ReportFilter.year,
+                        onTap: () => context.read<ReportsCubit>().load(filter: ReportFilter.year),
+                      ),
+                      _FilterChip(
+                        label: 'الكل',
+                        filter: ReportFilter.all,
+                        selected: state.currentFilter == ReportFilter.all,
+                        onTap: () => context.read<ReportsCubit>().load(filter: ReportFilter.all),
+                      ),
+                      _FilterChip(
+                        label: 'مخصص',
+                        filter: ReportFilter.custom,
+                        selected: state.currentFilter == ReportFilter.custom,
+                        onTap: () => _handleCustomRange(context),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -105,51 +156,88 @@ class _ReportsView extends StatelessWidget {
     );
   }
 
+  void _handleCustomRange(BuildContext context) async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: AppColors.warmOrange,
+              onPrimary: Colors.white,
+              surface: AppColors.charcoalMedium,
+              onSurface: AppColors.cream,
+            ),
+            dialogBackgroundColor: AppColors.charcoalDark,
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      context.read<ReportsCubit>().load(
+            filter: ReportFilter.custom,
+            from: picked.start,
+            to: picked.end,
+          );
+    }
+  }
+
   Widget _buildStatsGrid(
       BuildContext context, ReportsSummary? summary, int topItemsCount) {
     final s = summary ??
         const ReportsSummary(revenue: 0, ordersCount: 0, avgOrder: 0);
-    return GridView.count(
-      crossAxisCount: MediaQuery.of(context).size.width > 1200 ? 4 : 2,
-      crossAxisSpacing: AppSpacing.md,
-      mainAxisSpacing: AppSpacing.md,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 1.8,
-      children: [
-        DashboardStatCard(
-          title: 'الإيرادات',
-          value: '${s.revenue.toStringAsFixed(2)} ج.م',
-          icon: Icons.attach_money,
-          color: AppColors.warmOrange,
-          trend: 'اليوم',
-          isPositiveTrend: true,
-        ),
-        DashboardStatCard(
-          title: 'الطلبات',
-          value: '${s.ordersCount}',
-          icon: Icons.receipt_long,
-          color: AppColors.ember,
-          trend: 'مباشر',
-          isPositiveTrend: true,
-        ),
-        DashboardStatCard(
-          title: 'متوسط الطلب',
-          value: '${s.avgOrder.toStringAsFixed(2)} ج.م',
-          icon: Icons.show_chart,
-          color: AppColors.successGreen,
-          trend: 'لكل فاتورة',
-          isPositiveTrend: true,
-        ),
-        DashboardStatCard(
-          title: 'أهم الأصناف',
-          value: '$topItemsCount',
-          icon: Icons.local_fire_department,
-          color: AppColors.grillRed,
-          trend: 'نشطة',
-          isPositiveTrend: true,
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final crossAxisCount = width > 1200 ? 4 : width > 600 ? 2 : 1;
+        final childAspectRatio = width > 1200 ? 2.0 : width > 600 ? 2.2 : 3.5;
+        return GridView.count(
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: AppSpacing.md,
+          mainAxisSpacing: AppSpacing.md,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          childAspectRatio: childAspectRatio,
+          children: [
+            DashboardStatCard(
+              title: 'الإيرادات',
+              value: '${s.revenue.toStringAsFixed(2)} ج.م',
+              icon: Icons.attach_money,
+              color: AppColors.warmOrange,
+              trend: 'اليوم',
+              isPositiveTrend: true,
+            ),
+            DashboardStatCard(
+              title: 'الطلبات',
+              value: '${s.ordersCount}',
+              icon: Icons.receipt_long,
+              color: AppColors.ember,
+              trend: 'مباشر',
+              isPositiveTrend: true,
+            ),
+            DashboardStatCard(
+              title: 'متوسط الطلب',
+              value: '${s.avgOrder.toStringAsFixed(2)} ج.م',
+              icon: Icons.show_chart,
+              color: AppColors.successGreen,
+              trend: 'لكل فاتورة',
+              isPositiveTrend: true,
+            ),
+            DashboardStatCard(
+              title: 'أهم الأصناف',
+              value: '$topItemsCount',
+              icon: Icons.local_fire_department,
+              color: AppColors.grillRed,
+              trend: 'نشطة',
+              isPositiveTrend: true,
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -453,3 +541,44 @@ class _TopItemsChart extends StatelessWidget {
     );
   }
 }
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final ReportFilter filter;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _FilterChip({
+    required this.label,
+    required this.filter,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: ChoiceChip(
+        label: Text(label),
+        selected: selected,
+        onSelected: (_) => onTap(),
+        selectedColor: AppColors.warmOrange,
+        backgroundColor: AppColors.surfaceDark,
+        labelStyle: TextStyle(
+          color: selected ? Colors.white : AppColors.creamMuted,
+          fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+          fontSize: 13,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+            color: selected ? AppColors.warmOrange : AppColors.borderColor,
+          ),
+        ),
+      ),
+    );
+  }
+}
+

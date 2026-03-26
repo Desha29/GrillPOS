@@ -1,6 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../reports/data/reports_repository.dart';
 
+enum ReportFilter { today, yesterday, week, month, year, all, custom }
+
 class ReportsState {
   final bool loading;
   final String? error;
@@ -8,6 +10,9 @@ class ReportsState {
   final List<TopItem> topItems;
   final List<CategorySales> categorySales;
   final List<DailyRevenuePoint> trend;
+  final ReportFilter currentFilter;
+  final DateTime? customFrom;
+  final DateTime? customTo;
 
   const ReportsState({
     this.loading = false,
@@ -16,6 +21,9 @@ class ReportsState {
     this.topItems = const [],
     this.categorySales = const [],
     this.trend = const [],
+    this.currentFilter = ReportFilter.today,
+    this.customFrom,
+    this.customTo,
   });
 
   ReportsState copyWith({
@@ -25,6 +33,9 @@ class ReportsState {
     List<TopItem>? topItems,
     List<CategorySales>? categorySales,
     List<DailyRevenuePoint>? trend,
+    ReportFilter? currentFilter,
+    DateTime? customFrom,
+    DateTime? customTo,
     bool clearError = false,
   }) {
     return ReportsState(
@@ -34,6 +45,9 @@ class ReportsState {
       topItems: topItems ?? this.topItems,
       categorySales: categorySales ?? this.categorySales,
       trend: trend ?? this.trend,
+      currentFilter: currentFilter ?? this.currentFilter,
+      customFrom: customFrom ?? this.customFrom,
+      customTo: customTo ?? this.customTo,
     );
   }
 }
@@ -43,13 +57,60 @@ class ReportsCubit extends Cubit<ReportsState> {
 
   ReportsCubit(this._repo) : super(const ReportsState());
 
-  Future<void> load({DateTime? from, DateTime? to}) async {
-    emit(state.copyWith(loading: true, clearError: true));
+  Future<void> load({ReportFilter? filter, DateTime? from, DateTime? to}) async {
+    final activeFilter = filter ?? state.currentFilter;
+    final startFrom = from ?? state.customFrom;
+    final endTo = to ?? state.customTo;
+
+    emit(state.copyWith(
+      loading: true,
+      clearError: true,
+      currentFilter: activeFilter,
+      customFrom: startFrom,
+      customTo: endTo,
+    ));
+
     try {
-      final summary = await _repo.getSummary(from: from, to: to);
-      final topItems = await _repo.getTopItems(from: from, to: to);
-      final categorySales = await _repo.getSalesByCategory(from: from, to: to);
-      final trend = await _repo.getDailyRevenueTrend(days: 7);
+      DateTime? effectiveFrom;
+      DateTime? effectiveTo;
+      final now = DateTime.now();
+
+      switch (activeFilter) {
+        case ReportFilter.today:
+          effectiveFrom = DateTime(now.year, now.month, now.day);
+          break;
+        case ReportFilter.yesterday:
+          effectiveFrom = DateTime(now.year, now.month, now.day - 1);
+          effectiveTo = DateTime(now.year, now.month, now.day, 0, 0, -1);
+          break;
+        case ReportFilter.week:
+          effectiveFrom = now.subtract(const Duration(days: 7));
+          break;
+        case ReportFilter.month:
+          effectiveFrom = DateTime(now.year, now.month, 1);
+          break;
+        case ReportFilter.year:
+          effectiveFrom = DateTime(now.year, 1, 1);
+          break;
+        case ReportFilter.all:
+          effectiveFrom = null;
+          break;
+        case ReportFilter.custom:
+          effectiveFrom = startFrom;
+          effectiveTo = endTo;
+          break;
+      }
+
+      final summary =
+          await _repo.getSummary(from: effectiveFrom, to: effectiveTo);
+      final topItems =
+          await _repo.getTopItems(from: effectiveFrom, to: effectiveTo);
+      final categorySales =
+          await _repo.getSalesByCategory(from: effectiveFrom, to: effectiveTo);
+      
+      // For trend, we show 7/30 days based on scope
+      final trendDays = activeFilter == ReportFilter.month ? 30 : 7;
+      final trend = await _repo.getDailyRevenueTrend(days: trendDays);
 
       emit(state.copyWith(
         loading: false,

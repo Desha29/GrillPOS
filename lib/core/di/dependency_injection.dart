@@ -12,12 +12,10 @@ import '../../features/tables/data/tables_repository.dart';
 import '../../features/tables/presentation/cubit/tables_cubit.dart';
 import 'package:get_it/get_it.dart';
 
-import '../../features/settings/data/data_source/store_info_data_source.dart';
+import '../../features/settings/data/data_source/restaurant_info_data_source.dart';
 import '../../features/settings/data/repository/settings_repository_imp.dart';
 import '../../features/settings/presentation/cubit/settings_cubit.dart';
 import '../services/activity_logger.dart';
-
-
 
 final getIt = GetIt.instance;
 
@@ -25,31 +23,27 @@ void setup() {
   // Core Services
   getIt.registerSingleton<ActivityLogger>(ActivityLogger());
 
- 
-
   // GrillPOS repositories
   getIt.registerLazySingleton<MenuRepository>(() => MenuRepository());
   getIt.registerLazySingleton<TablesRepository>(() => TablesRepository());
   getIt.registerLazySingleton<OrdersRepository>(() => OrdersRepository());
   getIt.registerLazySingleton<ReportsRepository>(() => ReportsRepository());
 
-
-
   final userRepo = UserRepositoryImp();
   getIt.registerSingleton<UserRepositoryInt>(userRepo);
 
   getIt.registerSingleton<UserCubit>(UserCubit(
-      userRepository: userRepo,
+    userRepository: userRepo,
   ));
-
-  final storeInfoRepo = StoreInfoRepository(
-    dataSource: StoreInfoDataSource(),
+//
+  final restaurantInfoRepo = RestaurantInfoRepository(
+    dataSource: RestaurantInfoDataSource(),
   );
-  getIt.registerSingleton<StoreInfoRepository>(storeInfoRepo);
+  getIt.registerSingleton<RestaurantInfoRepository>(restaurantInfoRepo);
 
   getIt.registerLazySingleton<SettingsCubit>(() => SettingsCubit(
         userCubit: getIt<UserCubit>(),
-        storeRepository: storeInfoRepo,
+        restaurantRepository: restaurantInfoRepo,
       ));
 
   // GrillPOS Phase 3 Features

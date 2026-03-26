@@ -87,84 +87,89 @@ class _MenuSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<POSCubit>();
-    final width = MediaQuery.of(context).size.width;
-    final crossAxisCount = width > 1700 ? 6 : (width > 1300 ? 5 : 4);
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
-          child: const ScreenHeader(
-            title: 'نقطة البيع',
-            subtitle: 'سجل الطلبات بسرعة وكفاءة',
-            icon: Icons.computer,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Container(
-          height: 60,
-          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceDark,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.borderColor),
-          ),
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            children: [
-              _CategoryChip(
-                label: 'الكل',
-                selected: state.selectedCategoryId == null,
-                onTap: () => cubit.selectCategory(null),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final crossAxisCount = width > 1200 ? 6 : width > 900 ? 5 : width > 600 ? 4 : width > 400 ? 3 : 2;
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
+              child: const ScreenHeader(
+                title: 'نقطة البيع',
+                subtitle: 'سجل الطلبات بسرعة وكفاءة',
+                icon: Icons.computer,
               ),
-              ...state.categories.map(
-                (c) => _CategoryChip(
-                  label: c.displayName,
-                  selected: state.selectedCategoryId == c.id,
-                  onTap: () => cubit.selectCategory(c.id),
-                ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Container(
+              height: 60,
+              margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceDark,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.borderColor),
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Expanded(
-          child: state.visibleItems.isEmpty
-              ? Center(
-                  child: Text(
-                    'لا توجد أصناف متاحة',
-                    style: TextStyle(color: AppColors.creamMuted),
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                children: [
+                  _CategoryChip(
+                    label: 'الكل',
+                    selected: state.selectedCategoryId == null,
+                    onTap: () => cubit.selectCategory(null),
                   ),
-                )
-                : GridView.builder(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      childAspectRatio: 1.6, // Smaller cards fit better for text
-                      crossAxisSpacing: AppSpacing.sm,
-                      mainAxisSpacing: AppSpacing.sm,
+                  ...state.categories.map(
+                    (c) => _CategoryChip(
+                      label: c.displayName,
+                      selected: state.selectedCategoryId == c.id,
+                      onTap: () => cubit.selectCategory(c.id),
                     ),
-                    itemCount: state.visibleItems.length,
-                    itemBuilder: (_, i) {
-                      final item = state.visibleItems[i];
-                      return FoodCard(
-                        item: item,
-                        onTap: () {
-                          if (item.unit == 'كيلو' || 
-                              ['cat_grills', 'cat_kebab', 'cat_kofta'].contains(item.categoryId)) {
-                            _showWeightPicker(context, item);
-                          } else {
-                            cubit.addToCart(item);
-                          }
-                        },
-                      );
-                    },
                   ),
-          ),
-        ],
-      );
-    }
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Expanded(
+              child: state.visibleItems.isEmpty
+                  ? Center(
+                      child: Text(
+                        'لا توجد أصناف متاحة',
+                        style: TextStyle(color: AppColors.creamMuted),
+                      ),
+                    )
+                    : GridView.builder(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          childAspectRatio: 1.6,
+                          crossAxisSpacing: AppSpacing.sm,
+                          mainAxisSpacing: AppSpacing.sm,
+                        ),
+                        itemCount: state.visibleItems.length,
+                        itemBuilder: (_, i) {
+                          final item = state.visibleItems[i];
+                          return FoodCard(
+                            item: item,
+                            onTap: () {
+                              if (item.unit == 'كيلو' || 
+                                  ['cat_grills', 'cat_kebab', 'cat_kofta'].contains(item.categoryId)) {
+                                _showWeightPicker(context, item);
+                              } else {
+                                cubit.addToCart(item);
+                              }
+                            },
+                          );
+                        },
+                      ),
+              ),
+          ],
+        );
+      },
+    );
+  }
 
     void _showWeightPicker(BuildContext context, MenuItem item) {
       final cubit = context.read<POSCubit>();
@@ -276,122 +281,131 @@ class _CartSection extends StatelessWidget {
       color: AppColors.charcoalMedium,
       child: Column(
         children: [
+          // Header - cart title + order type selector
           Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'سلة الطلبات',
-                      style: TextStyle(
-                        color: AppColors.cream,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 24,
-                      ),
+                Flexible(
+                  child: Text(
+                    'سلة الطلبات',
+                    style: TextStyle(
+                      color: AppColors.cream,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
                     ),
-                    if (state.cart.isNotEmpty)
-                      TextButton.icon(
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.grillRed,
-                          backgroundColor: AppColors.grillRed.withOpacity(0.1),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        onPressed: () => cubit.clearCart(),
-                        icon: const Icon(Icons.delete_sweep, size: 18),
-                        label: const Text('إفراغ السلة', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                      ),
-                  ],
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                const SizedBox(height: AppSpacing.md),
-                Container(
-                  padding: const EdgeInsets.all(4),
+                if (state.cart.isNotEmpty)
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.grillRed,
+                      backgroundColor: AppColors.grillRed.withOpacity(0.1),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: () => cubit.clearCart(),
+                    icon: const Icon(Icons.delete_sweep, size: 16),
+                    label: const Text('إفراغ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          // Order type segmented control
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceDark,
+                borderRadius: BorderRadius.circular(AppSpacing.buttonRadius),
+                border: Border.all(color: AppColors.borderColor),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _TypeSegmentButton(
+                      label: 'داخلي',
+                      icon: Icons.restaurant,
+                      selected: state.orderType == OrderType.dineIn,
+                      onTap: () => cubit.setOrderType(OrderType.dineIn),
+                    ),
+                  ),
+                  Expanded(
+                    child: _TypeSegmentButton(
+                      label: 'تيك أواي',
+                      icon: Icons.shopping_bag_outlined,
+                      selected: state.orderType == OrderType.takeaway,
+                      onTap: () => cubit.setOrderType(OrderType.takeaway),
+                    ),
+                  ),
+                  Expanded(
+                    child: _TypeSegmentButton(
+                      label: 'توصيل',
+                      icon: Icons.delivery_dining,
+                      selected: state.orderType == OrderType.delivery,
+                      onTap: () => cubit.setOrderType(OrderType.delivery),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Optional Table Selector for Dine-in
+          if (state.orderType == OrderType.dineIn)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
+              child: InkWell(
+                onTap: () => _showTableSelector(context, state),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceDark,
-                    borderRadius: BorderRadius.circular(AppSpacing.buttonRadius),
+                    color: AppColors.charcoalLight,
+                    borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: AppColors.borderColor),
                   ),
                   child: Row(
                     children: [
+                      Icon(Icons.table_restaurant, color: AppColors.warmOrange, size: 18),
+                      const SizedBox(width: AppSpacing.sm),
                       Expanded(
-                        child: _TypeSegmentButton(
-                          label: 'داخلي',
-                          icon: Icons.restaurant,
-                          selected: state.orderType == OrderType.dineIn,
-                          onTap: () => cubit.setOrderType(OrderType.dineIn),
+                        child: BlocBuilder<TablesCubit, TablesState>(
+                          builder: (context, tablesState) {
+                            String label = 'تحديد طاولة (اختياري)';
+                            if (state.selectedTableId != null) {
+                              try {
+                                final table = tablesState.tables.firstWhere((t) => t.id == state.selectedTableId);
+                                label = 'الطاولة: ${table.displayName}';
+                              } catch (_) {
+                                label = 'الطاولة محددة';
+                              }
+                            }
+                            return Text(label, style: TextStyle(color: AppColors.cream, fontSize: 13, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis);
+                          },
                         ),
                       ),
-                      Expanded(
-                        child: _TypeSegmentButton(
-                          label: 'تيك أواي',
-                          icon: Icons.shopping_bag_outlined,
-                          selected: state.orderType == OrderType.takeaway,
-                          onTap: () => cubit.setOrderType(OrderType.takeaway),
-                        ),
-                      ),
-                      Expanded(
-                        child: _TypeSegmentButton(
-                          label: 'توصيل',
-                          icon: Icons.delivery_dining,
-                          selected: state.orderType == OrderType.delivery,
-                          onTap: () => cubit.setOrderType(OrderType.delivery),
-                        ),
-                      ),
+                      if (state.selectedTableId != null)
+                        GestureDetector(
+                          onTap: () => context.read<POSCubit>().selectTable(null),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Icon(Icons.close, color: AppColors.mutedColor, size: 16),
+                          ),
+                        )
+                      else
+                        Icon(Icons.arrow_drop_down, color: AppColors.mutedColor, size: 20),
                     ],
                   ),
                 ),
-                // Optional Table Selector for Dine-in
-                if (state.orderType == OrderType.dineIn) ...[
-                   const SizedBox(height: AppSpacing.sm),
-                   InkWell(
-                     onTap: () => _showTableSelector(context, state),
-                     child: Container(
-                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                       decoration: BoxDecoration(
-                         color: AppColors.charcoalLight,
-                         borderRadius: BorderRadius.circular(8),
-                         border: Border.all(color: AppColors.borderColor),
-                       ),
-                       child: Row(
-                         children: [
-                           Icon(Icons.table_restaurant, color: AppColors.warmOrange, size: 20),
-                           const SizedBox(width: AppSpacing.sm),
-                           BlocBuilder<TablesCubit, TablesState>(
-                             builder: (context, tablesState) {
-                               String label = 'تحديد طاولة (اختياري)';
-                               if (state.selectedTableId != null) {
-                                 try {
-                                   final table = tablesState.tables.firstWhere((t) => t.id == state.selectedTableId);
-                                   label = 'الطاولة: ${table.displayName}';
-                                 } catch (_) {
-                                   label = 'الطاولة محددة';
-                                 }
-                               }
-                               return Text(label, style: TextStyle(color: AppColors.cream, fontSize: 13, fontWeight: FontWeight.bold));
-                             },
-                           ),
-                           const Spacer(),
-                           if (state.selectedTableId != null)
-                             GestureDetector(
-                               onTap: () => context.read<POSCubit>().selectTable(null),
-                               child: Padding(
-                                 padding: const EdgeInsets.all(4.0),
-                                 child: Icon(Icons.close, color: AppColors.mutedColor, size: 18),
-                               ),
-                             )
-                           else
-                             Icon(Icons.arrow_drop_down, color: AppColors.mutedColor),
-                         ],
-                       ),
-                     ),
-                   ),
-                ]
-              ],
+              ),
             ),
-          ),
+          const SizedBox(height: AppSpacing.sm),
+          // Cart items list
           Expanded(
             child: state.cart.isEmpty
                 ? Center(
@@ -399,18 +413,18 @@ class _CartSection extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.shopping_cart_outlined,
-                            size: 48,
+                            size: 40,
                             color: AppColors.mutedColor.withOpacity(0.4)),
                         const SizedBox(height: AppSpacing.sm),
                         Text(
                           'السلة فارغة',
-                          style: TextStyle(color: AppColors.creamMuted),
+                          style: TextStyle(color: AppColors.creamMuted, fontSize: 14),
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
                           'اضغط على أي صنف لإضافته',
                           style: TextStyle(
-                              color: AppColors.mutedColor, fontSize: 13),
+                              color: AppColors.mutedColor, fontSize: 12),
                         ),
                       ],
                     ),
@@ -448,56 +462,65 @@ class _CartSection extends StatelessWidget {
                     },
                   ),
           ),
+          // Totals + Checkout
           Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm),
             decoration: BoxDecoration(
               color: AppColors.surfaceDark,
               border: Border(top: BorderSide(color: AppColors.borderColor)),
             ),
-            child: Column(
-              children: [
-                _amountRow(context, 'المجموع الفرعي', state.subtotal),
-                const SizedBox(height: AppSpacing.xs),
-                _amountRow(context, 'الضريبة (${(state.taxRate * 100).toStringAsFixed(0)}%)', state.tax, isTax: true, taxRate: state.taxRate),
-                Divider(color: AppColors.borderColor, height: AppSpacing.xl),
-                _amountRow(context, 'الإجمالي', state.total, isTotal: true),
-                const SizedBox(height: AppSpacing.md),
-                POSButton(
-                  label: 'إتمام الطلب',
-                  icon: Icons.payment,
-                  width: double.infinity,
-                  onPressed: state.cart.isEmpty
-                      ? () {}
-                      : () async {
-                          final cubit = context.read<POSCubit>();
-                          final order = await cubit.checkout();
-                          if (!context.mounted) return;
-                          
-                          if (order == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(cubit.state.error ?? 'خطأ أثناء إتمام الطلب'),
-                                backgroundColor: AppColors.grillRed,
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _amountRow(context, 'المجموع الفرعي', state.subtotal),
+                  const SizedBox(height: 2),
+                  _amountRow(context, 'الضريبة (${(state.taxRate * 100).toStringAsFixed(0)}%)', state.tax, isTax: true, taxRate: state.taxRate),
+                  Divider(color: AppColors.borderColor, height: AppSpacing.md),
+                  _amountRow(context, 'الإجمالي', state.total, isTotal: true),
+                  const SizedBox(height: AppSpacing.sm),
+                  POSButton(
+                    label: 'إتمام الطلب',
+                    icon: Icons.payment,
+                    width: double.infinity,
+                    onPressed: state.cart.isEmpty
+                        ? () {}
+                        : () async {
+                            final cubit = context.read<POSCubit>();
+                            final order = await cubit.checkout();
+                            if (!context.mounted) return;
+                            
+                            if (order == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(cubit.state.error ?? 'خطأ أثناء إتمام الطلب'),
+                                  backgroundColor: AppColors.grillRed,
+                                ),
+                              );
+                              return;
+                            }
+                            
+                            final restaurantInfo =
+                                getIt<SettingsCubit>().currentRestaurantInfo;
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => InvoiceScreen(
+                                  order: order,
+                                  restaurantName:
+                                      restaurantInfo?.name.isNotEmpty == true
+                                          ? restaurantInfo!.name
+                                          : 'GrillPOS',
+                                  restaurantPhone: restaurantInfo?.phone,
+                                  restaurantAddress: restaurantInfo?.address,
+                                  restaurantLogo: restaurantInfo?.logoPath,
+                                ),
                               ),
                             );
-                            return;
-                          }
-                          
-                          final storeInfo = getIt<SettingsCubit>().currentStoreInfo;
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => InvoiceScreen(
-                                order: order,
-                                restaurantName: storeInfo?.name.isNotEmpty == true ? storeInfo!.name : 'GrillPOS',
-                                restaurantPhone: storeInfo?.phone,
-                                restaurantAddress: storeInfo?.address,
-                                restaurantLogo: storeInfo?.logoPath,
-                              ),
-                            ),
-                          );
-                        },
-                ),
-              ],
+                          },
+                  ),
+                ],
+              ),
             ),
           ),
         ],

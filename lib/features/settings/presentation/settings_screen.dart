@@ -11,20 +11,34 @@ import '../../../core/di/dependency_injection.dart';
 import '../../auth/data/models/user_model.dart';
 import '../../auth/presentation/cubit/user_states.dart';
 
-
-import 'widgets/close_day_card.dart';
 import 'widgets/logout_warning_banner.dart';
-import 'widgets/store_info_card.dart';
-import 'widgets/data_management_card.dart';
+import 'widgets/close_day_card.dart';
 
-class SettingsScreen extends StatelessWidget {
+import 'widgets/data_management_card.dart';
+import 'widgets/restaurant_info_card.dart';
+
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    final userCubit = getIt<UserCubit>();
+    if (userCubit.allUsers.isEmpty) {
+      userCubit.getAllUsers();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<UserCubit>.value(value: getIt<UserCubit>()..getAllUsers()),
+        BlocProvider<UserCubit>.value(value: getIt<UserCubit>()),
         BlocProvider.value(value: getIt<SettingsCubit>()),
       ],
       child: const _SettingsScreenContent(),
@@ -45,7 +59,9 @@ class _SettingsScreenContent extends StatelessWidget {
             showDialog(
               context: context,
               barrierDismissible: false,
-              builder: (c) => Center(child: CircularProgressIndicator(color: AppColors.warmOrange)),
+              builder: (c) => Center(
+                  child:
+                      CircularProgressIndicator(color: AppColors.warmOrange)),
             );
           } else if (state is UserFailure) {
             if (state.error.contains("إغلاق")) {
@@ -59,10 +75,12 @@ class _SettingsScreenContent extends StatelessWidget {
             if (userCubit.currentUser.userType == UserType.manager) {
               _showReportDialog(context);
             } else {
-              MotionSnackBarSuccess(context, "تم إغلاق اليوم بنجاح. جاري تسجيل الخروج...");
+              MotionSnackBarSuccess(
+                  context, "تم إغلاق اليوم بنجاح. جاري تسجيل الخروج...");
               Future.delayed(const Duration(milliseconds: 1500), () {
                 userCubit.logout();
-                Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                Navigator.of(context)
+                    .pushNamedAndRemoveUntil('/login', (route) => false);
               });
             }
           } else if (state is UserSuccess) {
@@ -91,11 +109,12 @@ class _SettingsScreenContent extends StatelessWidget {
                     Expanded(
                       child: ListView(
                         children: [
-                          if (getIt<UserCubit>().currentUser.userType == UserType.manager) ...[
+                          if (getIt<UserCubit>().currentUser.userType ==
+                              UserType.manager) ...[
                             DataManagementCard(isMobile: isMobile),
                             SizedBox(height: isMobile ? 12 : 16),
                           ],
-                          StoreInfoCard(isMobile: isMobile),
+                          RestaurantInfoCard(isMobile: isMobile),
                           SizedBox(height: isMobile ? 12 : 16),
                           CloseDayCard(isMobile: isMobile),
                         ],
@@ -120,14 +139,18 @@ class _SettingsScreenContent extends StatelessWidget {
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.charcoalMedium,
-        title: Text('تم إغلاق اليوم بنجاح', style: TextStyle(color: AppColors.cream)),
+        title: Text('تم إغلاق اليوم بنجاح',
+            style: TextStyle(color: AppColors.cream)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('تم حفظ تقرير اليوم بنجاح.', style: TextStyle(color: AppColors.cream)),
+            Text('تم حفظ تقرير اليوم بنجاح.',
+                style: TextStyle(color: AppColors.cream)),
             const SizedBox(height: 16),
             Text(
-              isManager ? 'يمكنك الآن عرض التقرير التفصيلي لليوم.' : 'سيتم تسجيل الخروج الآن.',
+              isManager
+                  ? 'يمكنك الآن عرض التقرير التفصيلي لليوم.'
+                  : 'سيتم تسجيل الخروج الآن.',
               style: TextStyle(color: AppColors.creamMuted, fontSize: 13),
             ),
           ],
@@ -141,10 +164,10 @@ class _SettingsScreenContent extends StatelessWidget {
             onPressed: () {
               Navigator.pop(ctx);
               if (isManager) {
-            
               } else {
                 userCubit.logout();
-                Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                Navigator.of(context)
+                    .pushNamedAndRemoveUntil('/login', (route) => false);
               }
             },
             child: Text(isManager ? 'عرض تقرير اليوم' : 'حسناً'),

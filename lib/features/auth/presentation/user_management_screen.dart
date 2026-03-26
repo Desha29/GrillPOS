@@ -10,13 +10,27 @@ import '../data/models/user_model.dart';
 import 'cubit/user_cubit.dart';
 import 'cubit/user_states.dart';
 
-class UserManagementScreen extends StatelessWidget {
+class UserManagementScreen extends StatefulWidget {
   const UserManagementScreen({super.key});
+
+  @override
+  State<UserManagementScreen> createState() => _UserManagementScreenState();
+}
+
+class _UserManagementScreenState extends State<UserManagementScreen> {
+  @override
+  void initState() {
+    super.initState();
+    final userCubit = getIt<UserCubit>();
+    if (userCubit.allUsers.isEmpty) {
+      userCubit.getAllUsers();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider<UserCubit>.value(
-      value: getIt<UserCubit>()..getAllUsers(),
+      value: getIt<UserCubit>(),
       child: const _UserManagementView(),
     );
   }
