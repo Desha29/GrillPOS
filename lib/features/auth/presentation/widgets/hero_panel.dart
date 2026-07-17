@@ -7,23 +7,9 @@ class HeroPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final primary = theme.colorScheme.primary;
 
-    return Container(
-      decoration: BoxDecoration(
-        // Added your new background image here
-        image: DecorationImage(
-          image: const AssetImage(
-              'assets/images/grillpos/login_bg.png'), // Ensure this matches your file name
-          fit: BoxFit.cover,
-          // A subtle darkening filter ensures the white text and logo pop perfectly
-          colorFilter: ColorFilter.mode(
-            Colors.black.withOpacity(0.3),
-            BlendMode.darken,
-          ),
-        ),
-      ),
+    return SizedBox.expand(
       child: Stack(
         children: [
           // Subtle grid watermark behind content
@@ -39,10 +25,8 @@ class HeroPanel extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Image.asset(
-                    isDark
-                        ? 'assets/images/grillpos/logo_full.png'
-                        : 'assets/images/grillpos/logo_full_l.png',
-                    height: 150,
+                    'assets/images/grillpos/logo_full.png',
+                    height: 250,
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) => Icon(
                       Icons.local_fire_department_rounded,

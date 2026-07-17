@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/data/services/persistence_initializer.dart';
 import '../../../core/di/dependency_injection.dart';
+import '../../../core/theme/theme_cubit.dart';
 import '../../dashboard/presentation/dashboard_screen.dart';
 import '../data/models/user_model.dart';
 import 'cubit/user_cubit.dart';
@@ -201,36 +203,23 @@ class _LoginScreenState extends State<LoginScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final primary = theme.colorScheme.primary;
 
-    // Premium warm-toned gradient matching GrillPOS branding
-    final gradient = isDark
-        ? LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color.alphaBlend(
-                  primary.withOpacity(0.08), const Color(0xFF0F1115)),
-              const Color(0xFF0F1115),
-              Color.alphaBlend(
-                  primary.withOpacity(0.03), const Color(0xFF0F1115)),
-            ],
-          )
-        : LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color.alphaBlend(
-                  primary.withOpacity(0.05), const Color(0xFFF5F6FA)),
-              const Color(0xFFF5F6FA),
-              Color.alphaBlend(
-                  primary.withOpacity(0.02), const Color(0xFFF5F6FA)),
-            ],
-          );
+
 
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Scaffold(
         body: Container(
-          decoration: BoxDecoration(gradient: gradient),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0D0E12) : const Color(0xFFF0F1F5),
+            image: DecorationImage(
+              image: const AssetImage('assets/images/grillpos/login_bg.png'),
+              fit: BoxFit.cover,
+              colorFilter: ColorFilter.mode(
+                Colors.black.withOpacity(isDark ? 0.6 : 0.25),
+                BlendMode.srcOver,
+              ),
+            ),
+          ),
           child: Stack(
             children: [
               // Subtle food & drink icon watermark
@@ -276,6 +265,42 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   );
                 },
+              ),
+              // Floating Theme Switcher Button in Corner
+              Positioned(
+                top: 16 + MediaQuery.of(context).padding.top,
+                right: 24,
+                child: SafeArea(
+                  child: BlocBuilder<ThemeCubit, ThemeState>(
+                    builder: (context, themeState) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface.withOpacity(isDark ? 0.2 : 0.8),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: theme.colorScheme.outlineVariant.withOpacity(0.2),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 8,
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          onPressed: () => context.read<ThemeCubit>().toggleTheme(),
+                          icon: Icon(
+                            themeState.isDarkMode
+                                ? Icons.light_mode_rounded
+                                : Icons.dark_mode_rounded,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                          tooltip: 'Toggle Theme',
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
             ],
           ),

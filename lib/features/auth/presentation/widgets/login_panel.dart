@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -52,137 +53,146 @@ class LoginPanel extends StatelessWidget {
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 480),
-          padding: const EdgeInsets.all(40),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.3 : 0.12),
-                blurRadius: 40,
-                offset: const Offset(0, 20),
-              ),
-            ],
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withOpacity(0.05)
-                  : Colors.black.withOpacity(0.04),
-            ),
-          ),
-          child: Form(
-            key: formKey,
-            child: AutofillGroup(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Brand logo
-                  _BrandLogo(),
-                  const SizedBox(height: 32),
-                  // Welcome text
-                  Text(
-                    'Welcome Back',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
-                    ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 480),
+              padding: const EdgeInsets.all(40),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface.withOpacity(isDark ? 0.45 : 0.75),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.12),
+                    blurRadius: 40,
+                    offset: const Offset(0, 20),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Sign in to your Grill POS account',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  // Error banner
-                  if (loginError != null)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(bottom: 24),
-                      decoration: BoxDecoration(
-                        color: AppColors.errorColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.errorColor.withOpacity(0.2),
-                        ),
-                      ),
-                      child: Text(
-                        loginError!,
-                        style: const TextStyle(
-                          color: AppColors.errorColor,
-                          fontSize: 14,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ).animate().shake(),
-                  // Quick user selector
-                  _SectionLabel(),
-                  const SizedBox(height: 12),
-                  QuickUserSelector(
-                    users: users,
-                    selectedUser: selectedUser,
-                    loading: loadingUsers,
-                    error: usersError,
-                    onSelected: onUserSelected,
-                    onRetry: onRetry,
-                  ),
-                  const SizedBox(height: 20),
-                  const _CredentialsDivider(),
-                  const SizedBox(height: 20),
-                  // Employee field
-                  LoginTextField(
-                    controller: employeeController,
-                    label: 'Employee PIN / ID',
-                    icon: Icons.badge_outlined,
-                    textInputAction: TextInputAction.next,
-                    autofillHints: const [AutofillHints.username],
-                    onChanged: onEmployeeChanged,
-                    validator: (value) =>
-                        value == null || value.trim().isEmpty
-                            ? 'Enter your employee PIN or ID.'
-                            : null,
-                  ),
-                  const SizedBox(height: 20),
-                  // Password field
-                  LoginTextField(
-                    controller: passwordController,
-                    focusNode: passwordFocusNode,
-                    label: 'Password',
-                    icon: Icons.lock_outline_rounded,
-                    obscureText: !passwordVisible,
-                    textInputAction: TextInputAction.done,
-                    autofillHints: const [AutofillHints.password],
-                    suffixIcon: IconButton(
-                      tooltip:
-                          passwordVisible ? 'Hide password' : 'Show password',
-                      onPressed: onTogglePassword,
-                      icon: Icon(
-                        passwordVisible
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                      ),
-                    ),
-                    onFieldSubmitted: (_) => onSubmit(),
-                    validator: (value) => value == null || value.isEmpty
-                        ? 'Enter your password.'
-                        : null,
-                  ),
-                  const SizedBox(height: 32),
-                  // Sign-in button
-                  _SignInButton(
-                    loading: authenticating,
-                    onPressed: onSubmit,
-                  ),
-                  const SizedBox(height: 28),
-                  const StatusFooter(),
                 ],
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.08)
+                      : Colors.black.withOpacity(0.06),
+                ),
+              ),
+              child: Form(
+                key: formKey,
+                child: AutofillGroup(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Brand logo
+                      _BrandLogo(),
+                      const SizedBox(height: 32),
+                      // Welcome text
+                      Text(
+                        'Welcome Back',
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Sign in to your Grill POS account',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      // Error banner
+                      if (loginError != null)
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 24),
+                          decoration: BoxDecoration(
+                            color: AppColors.errorColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.errorColor.withOpacity(0.2),
+                            ),
+                          ),
+                          child: Text(
+                            loginError!,
+                            style: const TextStyle(
+                              color: AppColors.errorColor,
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ).animate().shake(),
+                      // Quick user selector
+                      _SectionLabel(),
+                      const SizedBox(height: 12),
+                      QuickUserSelector(
+                        users: users,
+                        selectedUser: selectedUser,
+                        loading: loadingUsers,
+                        error: usersError,
+                        onSelected: onUserSelected,
+                        onRetry: onRetry,
+                      ),
+                      const SizedBox(height: 20),
+                      const _CredentialsDivider(),
+                      const SizedBox(height: 20),
+                      // Employee field
+                      LoginTextField(
+                        controller: employeeController,
+                        label: 'Employee PIN / ID',
+                        icon: Icons.badge_outlined,
+                        textInputAction: TextInputAction.next,
+                        autofillHints: const [AutofillHints.username],
+                        onChanged: onEmployeeChanged,
+                        validator: (value) =>
+                            value == null || value.trim().isEmpty
+                                ? 'Enter your employee PIN or ID.'
+                                : null,
+                      ),
+                      const SizedBox(height: 20),
+                      // Password field
+                      LoginTextField(
+                        controller: passwordController,
+                        focusNode: passwordFocusNode,
+                        label: 'Password',
+                        icon: Icons.lock_outline_rounded,
+                        obscureText: !passwordVisible,
+                        textInputAction: TextInputAction.done,
+                        autofillHints: const [AutofillHints.password],
+                        suffixIcon: IconButton(
+                          tooltip:
+                              passwordVisible ? 'Hide password' : 'Show password',
+                          onPressed: onTogglePassword,
+                          icon: Icon(
+                            passwordVisible
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                          ),
+                        ),
+                        onFieldSubmitted: (_) => onSubmit(),
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Enter your password.'
+                            : null,
+                      ),
+                      const SizedBox(height: 32),
+                      // Sign-in button
+                      _SignInButton(
+                        loading: authenticating,
+                        onPressed: onSubmit,
+                      ),
+                      const SizedBox(height: 28),
+                      const StatusFooter(),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-        ).animate().slideY(begin: 0.1, duration: 600.ms).fadeIn(),
+        )
+            .animate()
+            .slideY(begin: 0.1, duration: 600.ms)
+            .fadeIn(),
       ),
     );
   }
