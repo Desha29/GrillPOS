@@ -58,14 +58,15 @@ class LoginPanel extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
             child: Container(
-              constraints: const BoxConstraints(maxWidth: 480),
-              padding: const EdgeInsets.all(40),
+              constraints: const BoxConstraints(maxWidth: 540),
+              padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 32),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surface.withOpacity(isDark ? 0.45 : 0.75),
+                color:
+                    theme.colorScheme.surface.withOpacity(isDark ? 0.45 : 0.92),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.12),
+                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
                     blurRadius: 40,
                     offset: const Offset(0, 20),
                   ),
@@ -84,10 +85,13 @@ class LoginPanel extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Brand logo
-                      _BrandLogo(),
+                      Center(
+                        child: _BrandLogo(),
+                      ),
                       const SizedBox(height: 32),
                       // Welcome text
                       Text(
+                        textAlign: TextAlign.center,
                         'Welcome Back',
                         style: theme.textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
@@ -96,6 +100,7 @@ class LoginPanel extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
+                        textAlign: TextAlign.center,
                         'Sign in to your Grill POS account',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
@@ -161,8 +166,9 @@ class LoginPanel extends StatelessWidget {
                         textInputAction: TextInputAction.done,
                         autofillHints: const [AutofillHints.password],
                         suffixIcon: IconButton(
-                          tooltip:
-                              passwordVisible ? 'Hide password' : 'Show password',
+                          tooltip: passwordVisible
+                              ? 'Hide password'
+                              : 'Show password',
                           onPressed: onTogglePassword,
                           icon: Icon(
                             passwordVisible
@@ -189,10 +195,7 @@ class LoginPanel extends StatelessWidget {
               ),
             ),
           ),
-        )
-            .animate()
-            .slideY(begin: 0.1, duration: 600.ms)
-            .fadeIn(),
+        ).animate().slideY(begin: 0.1, duration: 600.ms).fadeIn(),
       ),
     );
   }
@@ -203,7 +206,7 @@ class _BrandLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Row(
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Image.asset(
@@ -216,15 +219,12 @@ class _BrandLogo extends StatelessWidget {
             color: theme.colorScheme.primary,
           ),
         ),
-        const SizedBox(width: 12),
         Text(
           'Grill POS',
           style: TextStyle(
             color: theme.colorScheme.onSurface,
             fontSize: 24,
             fontWeight: FontWeight.w800,
-            letterSpacing: -0.5,
-            height: 1.0,
           ),
         ),
       ],

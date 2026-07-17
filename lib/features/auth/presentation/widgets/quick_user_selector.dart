@@ -21,15 +21,14 @@ class QuickUserSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     if (loading && users.isEmpty) {
-      return SizedBox(
-        height: 106,
+      return const SizedBox(
+        height: 62,
         child: Center(
-          child: CircularProgressIndicator(
-            color: theme.colorScheme.primary,
-            strokeWidth: 2.5,
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
           ),
         ),
       );
@@ -41,23 +40,159 @@ class QuickUserSelector extends StatelessWidget {
         onAction: onRetry,
       );
     }
+
+    // Compact horizontal scrollable user chips
     return SizedBox(
-      height: 106,
+      height: 62,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
         itemCount: users.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final user = users[index];
-          return SizedBox(
-            width: 230,
-            child: QuickUserCard(
-              user: user,
-              selected: selectedUser?.username == user.username,
-              onTap: () => onSelected(user),
-            ),
+          final isSelected = selectedUser?.username == user.username;
+          final manager = user.userType == UserType.manager;
+
+          return _CompactUserChip(
+            user: user,
+            selected: isSelected,
+            manager: manager,
+            onTap: () => onSelected(user),
           );
         },
+      ),
+    );
+  }
+}
+
+class _CompactUserChip extends StatefulWidget {
+  const _CompactUserChip({
+    required this.user,
+    required this.selected,
+    required this.manager,
+    required this.onTap,
+  });
+
+  final User user;
+  final bool selected;
+  final bool manager;
+  final VoidCallback onTap;
+
+  @override
+  State<_CompactUserChip> createState() => _CompactUserChipState();
+}
+
+class _CompactUserChipState extends State<_CompactUserChip> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+
+    final Color bgColor = widget.selected
+        ? primary.withOpacity(0.12)
+        : (_hovered
+            ? primary.withOpacity(0.06)
+            : (isDark
+                ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.5)
+                : theme.colorScheme.surfaceContainerLowest));
+
+    final Color borderColor = widget.selected
+        ? primary
+        : (_hovered
+            ? primary.withOpacity(0.35)
+            : theme.colorScheme.outlineVariant.withOpacity(0.3));
+
+    return Semantics(
+      button: true,
+      selected: widget.selected,
+      label: '${widget.user.name}, ${widget.manager ? 'Manager' : 'Cashier'}',
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: borderColor,
+                width: widget.selected ? 1.8 : 1.0,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Avatar circle
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: widget.selected
+                        ? primary.withOpacity(0.15)
+                        : theme.colorScheme.surfaceContainerHighest
+                            .withOpacity(isDark ? 0.6 : 0.5),
+                    gradient: widget.user.userType == UserType.manager
+                        ? LinearGradient(
+                            colors: [Colors.red, Colors.orange],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                  ),
+                  child: Center(
+                    child: Text(
+                      widget.manager ? 'M' : 'C',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // Name & role
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.user.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      widget.manager ? 'Manager' : 'Cashier',
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant
+                            .withOpacity(0.65),
+                        height: 1.2,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                if (widget.selected) ...[
+                  const SizedBox(width: 8),
+                  Icon(Icons.check_circle_rounded, size: 18, color: primary),
+                ],
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -81,10 +216,10 @@ class QuickUsersMessage extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
-      height: 106,
+      height: 62,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: isDark 
+        color: isDark
             ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.5)
             : theme.colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
@@ -101,7 +236,7 @@ class QuickUsersMessage extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 14,
+                fontSize: 13,
               ),
             ),
           ),
@@ -109,130 +244,10 @@ class QuickUsersMessage extends StatelessWidget {
             onPressed: onAction,
             child: Text(
               actionLabel,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class QuickUserCard extends StatefulWidget {
-  const QuickUserCard({
-    super.key,
-    required this.user,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final User user;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  State<QuickUserCard> createState() => _QuickUserCardState();
-}
-
-class _QuickUserCardState extends State<QuickUserCard> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final manager = widget.user.userType == UserType.manager;
-
-    final Color cardColor = widget.selected
-        ? theme.colorScheme.primary.withOpacity(0.08)
-        : (_hovered 
-            ? theme.colorScheme.primary.withOpacity(0.04)
-            : (isDark 
-                ? theme.colorScheme.surfaceContainerHighest 
-                : theme.colorScheme.surfaceContainerLowest));
-
-    final Color borderColor = widget.selected
-        ? theme.colorScheme.primary
-        : (_hovered
-            ? theme.colorScheme.primary.withOpacity(0.4)
-            : theme.colorScheme.outlineVariant.withOpacity(0.3));
-
-    return Semantics(
-      button: true,
-      selected: widget.selected,
-      label: '${widget.user.name}, ${manager ? 'Manager' : 'Cashier'}',
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        onEnter: (_) => setState(() => _hovered = true),
-        onExit: (_) => setState(() => _hovered = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: borderColor,
-              width: widget.selected ? 2.0 : 1.0,
-            ),
-            boxShadow: widget.selected
-                ? [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withOpacity(0.12),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    )
-                  ]
-                : null,
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: widget.onTap,
-              borderRadius: BorderRadius.circular(14),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '${manager ? '🔥' : '🍔'} ${widget.user.name}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      manager ? 'Manager' : 'Cashier',
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      manager ? '🟢 PIN Required' : '🍔 Ready',
-                      maxLines: 1,
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

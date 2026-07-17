@@ -36,7 +36,7 @@ class LoginTextField extends StatelessWidget {
     // Smooth, premium background colors for text fields
     final fillColor = isDark 
         ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.5) 
-        : theme.colorScheme.surfaceContainerLowest;
+        : const Color(0xFFF3F4F6);
     
     final labelColor = theme.colorScheme.onSurfaceVariant.withOpacity(0.7);
 
