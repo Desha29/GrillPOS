@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/components/dashboard_stat_card.dart';
 import '../../../../core/components/order_card.dart';
 import '../../../../core/components/screen_header.dart';

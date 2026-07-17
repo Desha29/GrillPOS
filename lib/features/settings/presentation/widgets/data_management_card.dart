@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:grill_pos/core/constants/app_colors.dart';
 import '../screens/data_management_screen.dart';
 
