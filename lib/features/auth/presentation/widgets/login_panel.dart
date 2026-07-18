@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/models/user_model.dart';
 import 'quick_user_selector.dart';
@@ -146,7 +147,7 @@ class LoginPanel extends StatelessWidget {
                       LoginTextField(
                         controller: employeeController,
                         label: 'Employee PIN / ID',
-                        icon: Icons.badge_outlined,
+                        icon: LucideIcons.badge,
                         textInputAction: TextInputAction.next,
                         autofillHints: const [AutofillHints.username],
                         onChanged: onEmployeeChanged,
@@ -161,7 +162,7 @@ class LoginPanel extends StatelessWidget {
                         controller: passwordController,
                         focusNode: passwordFocusNode,
                         label: 'Password',
-                        icon: Icons.lock_outline_rounded,
+                        icon: LucideIcons.lock,
                         obscureText: !passwordVisible,
                         textInputAction: TextInputAction.done,
                         autofillHints: const [AutofillHints.password],
@@ -172,8 +173,8 @@ class LoginPanel extends StatelessWidget {
                           onPressed: onTogglePassword,
                           icon: Icon(
                             passwordVisible
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
+                                ? LucideIcons.eyeOff
+                                : LucideIcons.eye,
                           ),
                         ),
                         onFieldSubmitted: (_) => onSubmit(),

@@ -153,69 +153,94 @@ class _SidebarHeader extends StatelessWidget {
       height: 82,
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: narrow ? 10 : 16),
-        child: Row(
-          mainAxisAlignment:
-              narrow ? MainAxisAlignment.center : MainAxisAlignment.start,
-          children: [
-            Tooltip(
-              message: narrow ? 'Expand sidebar' : 'GrillPOS',
-              child: InkWell(
-                onTap: narrow ? onToggle : null,
-                borderRadius: BorderRadius.circular(13),
-                child: Container(
-                  width: narrow ? 40 : 42,
-                  height: narrow ? 40 : 42,
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
+        child: narrow
+            ? Center(
+                child: Tooltip(
+                  message: 'Expand sidebar',
+                  child: InkWell(
+                    onTap: onToggle,
                     borderRadius: BorderRadius.circular(13),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: .75),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(13),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: .75),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: .18),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: const AppLogo(width: 34, height: 34),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: .18),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: const AppLogo(width: 34, height: 34),
-                ),
-              ),
-            ),
-            if (!narrow) ...[
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'GrillPOS',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.warmOrange,
-                        fontSize: 21,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: .4,
-                      ),
-                ),
-              ),
-              if (onToggle != null)
-                IconButton(
-                  onPressed: onToggle,
-                  tooltip: collapsed ? 'Expand sidebar' : 'Collapse sidebar',
-                  visualDensity: VisualDensity.compact,
-                  icon: Icon(
-                    collapsed
-                        ? LucideIcons.chevronRight
-                        : LucideIcons.chevronLeft,
-                    color: AppColors.creamMuted,
-                    size: 20,
                   ),
                 ),
-            ],
-          ],
-        ),
+              )
+            : ClipRect(
+                child: Row(
+                  children: [
+                    Tooltip(
+                      message: 'GrillPOS',
+                      child: Container(
+                        width: 42,
+                        height: 42,
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(13),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: .75),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: .18),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: const AppLogo(width: 34, height: 34),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'GrillPOS',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: AppColors.warmOrange,
+                              fontSize: 21,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: .4,
+                            ),
+                      ),
+                    ),
+                    if (onToggle != null)
+                      IconButton(
+                        onPressed: onToggle,
+                        tooltip: collapsed ? 'Expand sidebar' : 'Collapse sidebar',
+                        visualDensity: VisualDensity.compact,
+                        icon: Icon(
+                          collapsed
+                              ? LucideIcons.chevronRight
+                              : LucideIcons.chevronLeft,
+                          color: AppColors.creamMuted,
+                          size: 20,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
       ),
     );
   }
@@ -308,6 +333,7 @@ class _SidebarNavigationItemState extends State<_SidebarNavigationItem> {
                   duration: const Duration(milliseconds: 170),
                   curve: Curves.easeOutCubic,
                   height: 48,
+                  clipBehavior: Clip.hardEdge,
                   padding: EdgeInsets.symmetric(
                     horizontal: widget.narrow ? 0 : 16,
                   ),
@@ -458,6 +484,7 @@ class _CurrentUserCard extends StatelessWidget {
 
         return Container(
           padding: const EdgeInsets.all(10),
+          clipBehavior: Clip.hardEdge,
           decoration: BoxDecoration(
             color: AppColors.charcoalLight.withValues(alpha: .52),
             borderRadius: BorderRadius.circular(12),
@@ -566,6 +593,7 @@ class _FooterActionState extends State<_FooterAction> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 160),
               height: 46,
+              clipBehavior: Clip.hardEdge,
               padding: EdgeInsets.symmetric(
                 horizontal: widget.narrow ? 0 : 14,
               ),
