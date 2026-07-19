@@ -21,38 +21,32 @@ abstract final class DebugDataSeeder {
       await _removePreviousSeed(txn);
       await _seedUsers(txn, now);
       await _seedRestaurant(txn, now);
-      await _seedInventory(txn, now);
-      await _seedRepairs(txn, now);
+      await _seedRawMaterials(txn, now);
+      await _seedMenuItemIngredients(txn, now);
       await _seedRestaurantSales(txn, now);
-      await _seedComputerSales(txn, now);
     });
   }
 
   static Future<void> _removePreviousSeed(Transaction txn) async {
     const childTables = [
-      'computer_payments',
-      'computer_document_item_serials',
-      'computer_document_items',
-      'computer_documents',
-      'repair_history',
-      'repair_tickets',
+      'menu_item_ingredients',
       'stock_movements',
-      'product_serials',
       'payments',
       'order_items',
       'orders',
       'shifts',
       'products',
       'suppliers',
-      'customers',
       'categories',
       'activity_logs',
     ];
     for (final table in childTables) {
-      final idColumn =
-          table == 'computer_document_item_serials' ? 'document_item_id' : 'id';
-      await txn
-          .delete(table, where: '$idColumn LIKE ?', whereArgs: ['debug_%']);
+      try {
+        await txn
+            .delete(table, where: 'id LIKE ?', whereArgs: ['debug_%']);
+      } catch (_) {
+        // Table might not exist yet during first run
+      }
     }
     await txn.delete('users', where: 'id LIKE ?', whereArgs: ['debug_%']);
   }
@@ -82,7 +76,6 @@ abstract final class DebugDataSeeder {
         'viewOrders',
         'updateOrders',
         'processPayments',
-        'manageRepairs',
       ].join(','),
       'is_active': 1,
       'created_at': createdAt,
@@ -108,17 +101,15 @@ abstract final class DebugDataSeeder {
     );
   }
 
-  static Future<void> _seedInventory(Transaction txn, DateTime now) async {
+  /// Seeds restaurant raw materials (ingredients) with a supplier.
+  static Future<void> _seedRawMaterials(
+      Transaction txn, DateTime now) async {
     final timestamp = now.toIso8601String();
-    await txn.insert('categories', {
-      'id': 'debug_cat_parts',
-      'name': 'Computer Parts',
-      'color': '#60A5FA',
-      'sort_order': 1,
-    });
+
+    // Supplier
     await txn.insert('suppliers', {
       'id': 'debug_supplier',
-      'name': 'مورد الاختبار',
+      'name': 'موردين أغذية المطعم',
       'contact_name': 'أحمد',
       'phone': '01111111111',
       'email': 'supplier@example.test',
@@ -127,150 +118,310 @@ abstract final class DebugDataSeeder {
       'updated_at': timestamp,
     });
 
-    final products = [
-      (
-        'debug_product_ssd',
-        'SSD 1TB NVMe',
-        'SSD-DEMO-1',
-        2850.0,
-        2100.0,
-        8.0,
-        2.0,
-        1
-      ),
-      (
-        'debug_product_ram',
-        'RAM 16GB DDR4',
-        'RAM-DEMO-16',
-        1450.0,
-        980.0,
-        3.0,
-        4.0,
-        0
-      ),
-      (
-        'debug_product_mouse',
-        'Gaming Mouse',
-        'MOUSE-DEMO',
-        650.0,
-        390.0,
-        14.0,
-        3.0,
-        0
-      ),
+    // Category for raw materials
+    await txn.insert('categories', {
+      'id': 'debug_cat_meat',
+      'name': 'لحوم',
+      'color': '#D32F2F',
+      'sort_order': 1,
+    });
+    await txn.insert('categories', {
+      'id': 'debug_cat_poultry',
+      'name': 'دواجن',
+      'color': '#FF9800',
+      'sort_order': 2,
+    });
+    await txn.insert('categories', {
+      'id': 'debug_cat_grains',
+      'name': 'حبوب ونشويات',
+      'color': '#795548',
+      'sort_order': 3,
+    });
+    await txn.insert('categories', {
+      'id': 'debug_cat_oils',
+      'name': 'زيوت وتوابل',
+      'color': '#FFC107',
+      'sort_order': 4,
+    });
+    await txn.insert('categories', {
+      'id': 'debug_cat_vegs',
+      'name': 'خضروات',
+      'color': '#4CAF50',
+      'sort_order': 5,
+    });
+    await txn.insert('categories', {
+      'id': 'debug_cat_dairy',
+      'name': 'ألبان',
+      'color': '#2196F3',
+      'sort_order': 6,
+    });
+    await txn.insert('categories', {
+      'id': 'debug_cat_drinks_raw',
+      'name': 'مشروبات خام',
+      'color': '#00BCD4',
+      'sort_order': 7,
+    });
+
+    // Raw material products
+    final materials = <Map<String, dynamic>>[
+      {
+        'id': 'debug_mat_beef',
+        'name': 'لحم بقري مفروم',
+        'cost': 280.0,
+        'price': 280.0,
+        'stock': 50.0,
+        'min_stock': 10.0,
+        'unit': 'كيلو',
+        'category_id': 'debug_cat_meat',
+      },
+      {
+        'id': 'debug_mat_lamb',
+        'name': 'لحم ضاني',
+        'cost': 450.0,
+        'price': 450.0,
+        'stock': 30.0,
+        'min_stock': 5.0,
+        'unit': 'كيلو',
+        'category_id': 'debug_cat_meat',
+      },
+      {
+        'id': 'debug_mat_chicken',
+        'name': 'دجاج كامل',
+        'cost': 85.0,
+        'price': 85.0,
+        'stock': 40.0,
+        'min_stock': 10.0,
+        'unit': 'حبة',
+        'category_id': 'debug_cat_poultry',
+      },
+      {
+        'id': 'debug_mat_rice',
+        'name': 'أرز بسمتي',
+        'cost': 60.0,
+        'price': 60.0,
+        'stock': 100.0,
+        'min_stock': 20.0,
+        'unit': 'كيلو',
+        'category_id': 'debug_cat_grains',
+      },
+      {
+        'id': 'debug_mat_bread',
+        'name': 'خبز بلدي',
+        'cost': 1.5,
+        'price': 1.5,
+        'stock': 200.0,
+        'min_stock': 50.0,
+        'unit': 'رغيف',
+        'category_id': 'debug_cat_grains',
+      },
+      {
+        'id': 'debug_mat_oil',
+        'name': 'زيت ذرة',
+        'cost': 75.0,
+        'price': 75.0,
+        'stock': 20.0,
+        'min_stock': 5.0,
+        'unit': 'لتر',
+        'category_id': 'debug_cat_oils',
+      },
+      {
+        'id': 'debug_mat_onion',
+        'name': 'بصل',
+        'cost': 15.0,
+        'price': 15.0,
+        'stock': 30.0,
+        'min_stock': 5.0,
+        'unit': 'كيلو',
+        'category_id': 'debug_cat_vegs',
+      },
+      {
+        'id': 'debug_mat_tomato',
+        'name': 'طماطم',
+        'cost': 20.0,
+        'price': 20.0,
+        'stock': 25.0,
+        'min_stock': 5.0,
+        'unit': 'كيلو',
+        'category_id': 'debug_cat_vegs',
+      },
+      {
+        'id': 'debug_mat_potato',
+        'name': 'بطاطس',
+        'cost': 12.0,
+        'price': 12.0,
+        'stock': 40.0,
+        'min_stock': 10.0,
+        'unit': 'كيلو',
+        'category_id': 'debug_cat_vegs',
+      },
+      {
+        'id': 'debug_mat_tahini',
+        'name': 'طحينة خام',
+        'cost': 120.0,
+        'price': 120.0,
+        'stock': 10.0,
+        'min_stock': 2.0,
+        'unit': 'كيلو',
+        'category_id': 'debug_cat_oils',
+      },
+      {
+        'id': 'debug_mat_charcoal',
+        'name': 'فحم مشويات',
+        'cost': 25.0,
+        'price': 25.0,
+        'stock': 50.0,
+        'min_stock': 10.0,
+        'unit': 'كيلو',
+        'category_id': 'debug_cat_oils',
+      },
+      {
+        'id': 'debug_mat_pepsi',
+        'name': 'بيبسي كانز (كرتونة)',
+        'cost': 180.0,
+        'price': 180.0,
+        'stock': 10.0,
+        'min_stock': 3.0,
+        'unit': 'كرتونة',
+        'category_id': 'debug_cat_drinks_raw',
+      },
+      {
+        'id': 'debug_mat_water',
+        'name': 'مياه معدنية (شد 12)',
+        'cost': 48.0,
+        'price': 48.0,
+        'stock': 15.0,
+        'min_stock': 5.0,
+        'unit': 'شد',
+        'category_id': 'debug_cat_drinks_raw',
+      },
     ];
-    for (final product in products) {
+
+    for (final mat in materials) {
       await txn.insert('products', {
-        'id': product.$1,
-        'barcode': product.$1,
-        'name': product.$2,
-        'sku': product.$3,
-        'brand': 'DemoTech',
-        'price': product.$4,
-        'min_price': product.$4 * .9,
-        'wholesale_price': product.$4 * .85,
-        'cost': product.$5,
-        'stock': product.$6,
-        'min_stock': product.$7,
-        'category_id': 'debug_cat_parts',
+        ...mat,
+        'barcode': mat['id'],
+        'min_price': mat['price'],
+        'wholesale_price': mat['cost'],
         'supplier_id': 'debug_supplier',
-        'warranty_months': 12,
-        'track_serials': product.$8,
-        'product_type': 'merchandise',
+        'warranty_months': 0,
+        'track_serials': 0,
+        'product_type': 'raw_material',
         'is_active': 1,
         'created_at': timestamp,
         'updated_at': timestamp,
       });
-    }
-    await txn.insert('product_serials', {
-      'id': 'debug_serial_ssd_1',
-      'product_id': 'debug_product_ssd',
-      'serial_number': 'DEMO-SSD-0001',
-      'status': 'in_stock',
-      'purchase_cost': 2100.0,
-      'warranty_expiry': now.add(const Duration(days: 365)).toIso8601String(),
-      'created_at': timestamp,
-      'updated_at': timestamp,
-    });
-    await txn.insert('stock_movements', {
-      'id': 'debug_stock_opening',
-      'product_id': 'debug_product_ssd',
-      'serial_id': 'debug_serial_ssd_1',
-      'movement_type': 'opening_stock',
-      'quantity': 1.0,
-      'unit_cost': 2100.0,
-      'notes': 'Debug seed data',
-      'user_id': 'debug_admin',
-      'created_at': timestamp,
-    });
-  }
 
-  static Future<void> _seedRepairs(Transaction txn, DateTime now) async {
-    final timestamp = now.toIso8601String();
-    await txn.insert('customers', {
-      'id': 'debug_customer_walkin',
-      'name': 'عميل تجريبي',
-      'phone': '01222222222',
-      'email': 'customer@example.test',
-      'address': 'القاهرة',
-      'created_at': timestamp,
-      'updated_at': timestamp,
-    });
-    final tickets = [
-      (
-        'debug_repair_1',
-        'DBG-R-001',
-        'Laptop',
-        'Dell',
-        'Latitude 5420',
-        'in_progress',
-        'urgent',
-        'الجهاز لا يعمل',
-        1200.0,
-        400.0
-      ),
-      (
-        'debug_repair_2',
-        'DBG-R-002',
-        'Desktop',
-        'HP',
-        'ProDesk',
-        'ready',
-        'normal',
-        'تغيير مزود الطاقة',
-        850.0,
-        850.0
-      ),
-    ];
-    for (final ticket in tickets) {
-      await txn.insert('repair_tickets', {
-        'id': ticket.$1,
-        'ticket_number': ticket.$2,
-        'customer_id': 'debug_customer_walkin',
-        'device_type': ticket.$3,
-        'brand': ticket.$4,
-        'model': ticket.$5,
-        'reported_issue': ticket.$8,
-        'technician_name': 'فني التجربة',
-        'status': ticket.$6,
-        'priority': ticket.$7,
-        'estimated_cost': ticket.$9,
-        'final_cost': ticket.$6 == 'ready' ? ticket.$9 : 0.0,
-        'deposit': ticket.$10,
-        'due_date': now.add(const Duration(days: 2)).toIso8601String(),
-        'created_at': now.subtract(const Duration(days: 1)).toIso8601String(),
-        'updated_at': timestamp,
+      // Opening stock movement
+      await txn.insert('stock_movements', {
+        'id': 'debug_sm_${mat['id']}',
+        'product_id': mat['id'],
+        'movement_type': 'opening_stock',
+        'quantity': mat['stock'],
+        'unit_cost': mat['cost'],
+        'notes': 'Debug seed - opening inventory',
+        'user_id': 'debug_admin',
+        'created_at': timestamp,
       });
     }
-    await txn.insert('repair_history', {
-      'id': 'debug_repair_history_1',
-      'ticket_id': 'debug_repair_1',
-      'previous_status': 'received',
-      'new_status': 'in_progress',
-      'note': 'تم بدء الفحص الفني',
-      'changed_by': 'debug_admin',
-      'created_at': timestamp,
-    });
+  }
+
+  /// Seeds recipe links between generated menu items and raw material products.
+  static Future<void> _seedMenuItemIngredients(
+      Transaction txn, DateTime now) async {
+    final timestamp = now.toIso8601String();
+
+    // Query existing menu items that were seeded by SQLiteManager
+    final menuItems = await txn.query('menu_items',
+        columns: ['id', 'name', 'category_id'], limit: 50);
+    if (menuItems.isEmpty) return;
+
+    // Helper to find a menu item id by partial Arabic name
+    String? findItem(String partialAr) {
+      for (final item in menuItems) {
+        final nameAr = (item['name_ar'] ?? item['name']) as String? ?? '';
+        final nameEn = item['name'] as String? ?? '';
+        if (nameAr.contains(partialAr) || nameEn.contains(partialAr)) {
+          return item['id'] as String;
+        }
+      }
+      return null;
+    }
+
+    // Recipe definitions: menu item partial name -> list of (product_id, qty, unit)
+    final recipes = <String, List<(String, double, String)>>{
+      'كباب مخصوص': [
+        ('debug_mat_beef', 1.0, 'كيلو'),
+        ('debug_mat_onion', 0.2, 'كيلو'),
+        ('debug_mat_charcoal', 0.3, 'كيلو'),
+      ],
+      'كباب وكفتة': [
+        ('debug_mat_beef', 0.5, 'كيلو'),
+        ('debug_mat_lamb', 0.5, 'كيلو'),
+        ('debug_mat_onion', 0.2, 'كيلو'),
+        ('debug_mat_charcoal', 0.3, 'كيلو'),
+      ],
+      'كفتة مشوية': [
+        ('debug_mat_beef', 1.0, 'كيلو'),
+        ('debug_mat_onion', 0.3, 'كيلو'),
+        ('debug_mat_charcoal', 0.3, 'كيلو'),
+      ],
+      'فرخة مشوية': [
+        ('debug_mat_chicken', 1.0, 'حبة'),
+        ('debug_mat_charcoal', 0.5, 'كيلو'),
+      ],
+      'نصف فرخة مشوية': [
+        ('debug_mat_chicken', 0.5, 'حبة'),
+        ('debug_mat_charcoal', 0.3, 'كيلو'),
+      ],
+      'ساندوتش كفتة': [
+        ('debug_mat_beef', 0.15, 'كيلو'),
+        ('debug_mat_bread', 1.0, 'رغيف'),
+        ('debug_mat_onion', 0.05, 'كيلو'),
+      ],
+      'حواوشي': [
+        ('debug_mat_beef', 0.2, 'كيلو'),
+        ('debug_mat_bread', 1.0, 'رغيف'),
+        ('debug_mat_onion', 0.1, 'كيلو'),
+      ],
+      'أرز بسمتي': [
+        ('debug_mat_rice', 0.3, 'كيلو'),
+        ('debug_mat_oil', 0.05, 'لتر'),
+      ],
+      'سلطة خضراء': [
+        ('debug_mat_tomato', 0.15, 'كيلو'),
+        ('debug_mat_onion', 0.05, 'كيلو'),
+      ],
+      'طحينة': [
+        ('debug_mat_tahini', 0.1, 'كيلو'),
+      ],
+      'بطاطس محمرة': [
+        ('debug_mat_potato', 0.3, 'كيلو'),
+        ('debug_mat_oil', 0.15, 'لتر'),
+      ],
+      'بيبسي': [
+        ('debug_mat_pepsi', 0.04, 'كرتونة'),
+      ],
+      'مياه معدنية': [
+        ('debug_mat_water', 0.08, 'شد'),
+      ],
+    };
+
+    int counter = 1;
+    for (final entry in recipes.entries) {
+      final menuItemId = findItem(entry.key);
+      if (menuItemId == null) continue;
+
+      for (final (productId, qty, unit) in entry.value) {
+        await txn.insert('menu_item_ingredients', {
+          'id': 'debug_ingredient_${counter++}',
+          'menu_item_id': menuItemId,
+          'product_id': productId,
+          'quantity_needed': qty,
+          'unit': unit,
+          'created_at': timestamp,
+        });
+      }
+    }
   }
 
   static Future<void> _seedRestaurantSales(
@@ -372,56 +523,5 @@ abstract final class DebugDataSeeder {
       where: 'id = ?',
       whereArgs: ['table_1'],
     );
-  }
-
-  static Future<void> _seedComputerSales(
-    Transaction txn,
-    DateTime now,
-  ) async {
-    final timestamp = now.toIso8601String();
-    await txn.insert('computer_documents', {
-      'id': 'debug_computer_sale',
-      'document_number': 'DBG-SALE-001',
-      'document_type': 'sale',
-      'status': 'completed',
-      'customer_id': 'debug_customer_walkin',
-      'subtotal': 2850.0,
-      'discount_amount': 0.0,
-      'tax_rate': 0.0,
-      'tax_amount': 0.0,
-      'total_amount': 2850.0,
-      'paid_amount': 2850.0,
-      'refunded_amount': 0.0,
-      'balance_due': 0.0,
-      'payment_status': 'paid',
-      'notes': 'Debug seed sale',
-      'created_by': 'debug_admin',
-      'completed_at': timestamp,
-      'created_at': timestamp,
-      'updated_at': timestamp,
-    });
-    await txn.insert('computer_document_items', {
-      'id': 'debug_computer_item',
-      'document_id': 'debug_computer_sale',
-      'product_id': 'debug_product_ssd',
-      'product_name': 'SSD 1TB NVMe',
-      'sku': 'SSD-DEMO-1',
-      'quantity': 1.0,
-      'unit_price': 2850.0,
-      'unit_cost': 2100.0,
-      'line_subtotal': 2850.0,
-      'warranty_months': 12,
-      'returned_quantity': 0.0,
-      'track_serials': 1,
-      'created_at': timestamp,
-    });
-    await txn.insert('computer_payments', {
-      'id': 'debug_computer_payment',
-      'document_id': 'debug_computer_sale',
-      'amount': 2850.0,
-      'method': 'cash',
-      'received_by': 'debug_admin',
-      'created_at': timestamp,
-    });
   }
 }

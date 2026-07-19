@@ -25,9 +25,6 @@ import '../../orders/presentation/orders_screen.dart';
 import '../../menu/presentation/menu_management_screen.dart';
 import '../../reports/presentation/reports_screen.dart';
 import '../../auth/presentation/user_management_screen.dart';
-import '../../repairs/presentation/repairs_screen.dart';
-import '../../inventory/presentation/inventory_screen.dart';
-import '../../computer_sales/presentation/computer_sales_screen.dart';
 
 import '../../reports/presentation/cubit/reports_cubit.dart';
 import '../../reports/presentation/report_details_screen.dart';
@@ -82,26 +79,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         title: "الطلبات",
         screen: const OrdersScreen(),
       ),
-      SidebarItem(
-        id: 'repairs',
-        icon: LucideIcons.monitorCog,
-        title: "صيانة الكمبيوتر",
-        screen: const RepairsScreen(),
-      ),
-      if (PermissionGuard.can(curUser, AppPermission.processComputerSales))
-        SidebarItem(
-          id: 'computer_sales',
-          icon: LucideIcons.badgeDollarSign,
-          title: "مبيعات الكمبيوتر",
-          screen: const ComputerSalesScreen(),
-        ),
-      if (PermissionGuard.can(curUser, AppPermission.manageInventory))
-        SidebarItem(
-          id: 'inventory',
-          icon: LucideIcons.warehouse,
-          title: "المخزون والمنتجات",
-          screen: const InventoryScreen(),
-        ),
       if (PermissionGuard.can(curUser, AppPermission.manageMenu))
         SidebarItem(
           id: 'menu',

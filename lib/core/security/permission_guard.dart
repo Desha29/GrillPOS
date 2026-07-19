@@ -8,8 +8,6 @@ enum AppPermission {
   updateOrders,
   processPayments,
   processRefunds,
-  processComputerSales,
-  manageRepairs,
   manageInventory,
   manageMenu,
   viewReports,
@@ -28,8 +26,6 @@ extension AppPermissionDetails on AppPermission {
         AppPermission.updateOrders => 'تحديث حالة الطلبات',
         AppPermission.processPayments => 'تحصيل المدفوعات',
         AppPermission.processRefunds => 'تنفيذ المرتجعات',
-        AppPermission.processComputerSales => 'مبيعات الكمبيوتر',
-        AppPermission.manageRepairs => 'إدارة الصيانة',
         AppPermission.manageInventory => 'إدارة المخزون',
         AppPermission.manageMenu => 'إدارة المنيو',
         AppPermission.viewReports => 'عرض التقارير',
@@ -50,10 +46,7 @@ extension AppPermissionDetails on AppPermission {
         AppPermission.processPayments ||
         AppPermission.processRefunds =>
           'المبيعات والطلبات',
-        AppPermission.processComputerSales ||
-        AppPermission.manageRepairs ||
-        AppPermission.manageInventory =>
-          'مركز الكمبيوتر',
+        AppPermission.manageInventory ||
         AppPermission.manageMenu ||
         AppPermission.manageUsers ||
         AppPermission.manageSettings ||
@@ -84,8 +77,6 @@ class PermissionGuard {
     AppPermission.viewOrders,
     AppPermission.updateOrders,
     AppPermission.processPayments,
-    AppPermission.processComputerSales,
-    AppPermission.manageRepairs,
   };
 
   static Set<AppPermission> permissionsFor(User user) {
@@ -123,8 +114,6 @@ class PermissionGuard {
         'pos' => AppPermission.createOrders,
         'tables' => AppPermission.manageTables,
         'orders' => AppPermission.viewOrders,
-        'computer_sales' => AppPermission.processComputerSales,
-        'repairs' => AppPermission.manageRepairs,
         'inventory' => AppPermission.manageInventory,
         'menu' => AppPermission.manageMenu,
         'reports' => AppPermission.viewReports,
@@ -152,12 +141,6 @@ class PermissionGuard {
         user,
         AppPermission.processRefunds,
         message: 'تنفيذ المرتجعات متاح للمدير فقط.',
-      );
-
-  static void checkComputerSaleAccess(User user) => require(
-        user,
-        AppPermission.processComputerSales,
-        message: 'Your role cannot create computer quotations or sales.',
       );
 
   static void checkReportAccess(User user) => require(

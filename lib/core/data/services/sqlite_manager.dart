@@ -19,7 +19,7 @@ class SQLiteManager {
 
     _database = await openDatabase(
       databasePath,
-      version: 14,
+      version: 15,
       onCreate: _onCreate,
       onConfigure: _onConfigure,
       onUpgrade: _onUpgrade,
@@ -106,6 +106,14 @@ class SQLiteManager {
       await _addColumnIfMissing(db, 'users', 'permissions', 'TEXT');
       FileLogger.info(
         'Migration to v14 complete: customizable user permissions',
+        source: 'SQLite',
+      );
+    }
+    if (oldVersion < 15) {
+      await _createMenuItemIngredientsTable(db);
+      await _addColumnIfMissing(db, 'products', 'unit', 'TEXT');
+      FileLogger.info(
+        'Migration to v15 complete: menu item ingredients and product units',
         source: 'SQLite',
       );
     }
@@ -890,6 +898,27 @@ class SQLiteManager {
     await db.execute('ALTER TABLE $table ADD COLUMN $column $definition');
   }
 
+  /// Creates the table linking menu items to their raw material ingredients.
+  Future<void> _createMenuItemIngredientsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS menu_item_ingredients (
+        id TEXT PRIMARY KEY NOT NULL,
+        menu_item_id TEXT NOT NULL,
+        product_id TEXT NOT NULL,
+        quantity_needed REAL NOT NULL,
+        unit TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products(id),
+        CHECK (quantity_needed > 0)
+      )
+    ''');
+    await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_menu_item_ingredients_menu ON menu_item_ingredients(menu_item_id)');
+    await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_menu_item_ingredients_product ON menu_item_ingredients(product_id)');
+  }
+
   Future<void> _onCreate(Database db, int version) async {
     await _createComputerServiceTables(db);
     // Store settings table
@@ -968,6 +997,7 @@ class SQLiteManager {
         cost REAL DEFAULT 0.0,
         stock REAL DEFAULT 0.0,
         min_stock REAL DEFAULT 0.0,
+        unit TEXT,
         category_id TEXT,
         is_active INTEGER NOT NULL DEFAULT 1,
         created_at TEXT NOT NULL,
@@ -977,6 +1007,7 @@ class SQLiteManager {
     ''');
     await _createInventoryTables(db);
     await _createComputerSalesTables(db);
+    await _createMenuItemIngredientsTable(db);
 
     // Users table
     await db.execute('''
