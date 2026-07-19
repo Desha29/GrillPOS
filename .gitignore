@@ -28,6 +28,7 @@ migrate_working_dir/
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
+GrillPOSDebugData/
 .flutter-plugins
 .flutter-plugins-dependencies
 .pub-cache/
@@ -127,7 +128,8 @@ app.*.map.json
 *.iml
 *.ipr
 *.iws
-#folder database
-data/
+# Runtime database folder at the repository root. Source folders such as
+# lib/features/*/data contain application code and must remain versioned.
+/data/
 # End of .gitignore
 lib/secrets.dart

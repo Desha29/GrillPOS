@@ -1,4 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../auth/data/models/user_model.dart';
+import '../../../../core/security/permission_guard.dart';
 import '../../data/order_models.dart';
 import '../../data/orders_repository.dart';
 
@@ -33,14 +35,18 @@ class OrdersState {
 
 class OrdersCubit extends Cubit<OrdersState> {
   final OrdersRepository _repo;
+  int _loadRequest = 0;
 
   OrdersCubit(this._repo) : super(const OrdersState());
 
   Future<void> loadOrders() async {
+    final request = ++_loadRequest;
+    if (isClosed) return;
     emit(state.copyWith(loading: true, clearError: true));
     try {
-      final active = await _repo.getOrders(onlyActive: true);
       final all = await _repo.getOrders(onlyActive: false);
+      if (isClosed || request != _loadRequest) return;
+      final active = all.where((o) => o.isActive).toList();
       final history = all.where((o) => !o.isActive).toList();
 
       emit(state.copyWith(
@@ -49,24 +55,56 @@ class OrdersCubit extends Cubit<OrdersState> {
         historyOrders: history,
       ));
     } catch (e) {
+      if (isClosed || request != _loadRequest) return;
       emit(state.copyWith(loading: false, error: e.toString()));
     }
   }
 
-  Future<void> updateStatus(String orderId, OrderStatus status) async {
+  Future<void> updateStatus(
+    RestaurantOrder order,
+    OrderStatus status, {
+    required User actor,
+  }) async {
     try {
-      await _repo.setStatus(orderId, status);
+      PermissionGuard.require(
+        actor,
+        AppPermission.updateOrders,
+        message: 'ليس لديك صلاحية تحديث حالة الطلبات.',
+      );
+      await _repo.transitionStatus(
+        orderId: order.id,
+        expectedCurrent: order.status,
+        next: status,
+        actorId: actor.username,
+      );
       await loadOrders();
     } catch (e) {
+      if (isClosed) return;
       emit(state.copyWith(error: e.toString()));
     }
   }
 
-  Future<void> markPaid(String orderId) async {
+  Future<void> markPaid(
+    RestaurantOrder order, {
+    required User actor,
+    String method = 'cash',
+    String? referenceNumber,
+  }) async {
     try {
-      await _repo.setPaymentStatus(orderId, PaymentStatus.paid);
+      PermissionGuard.require(
+        actor,
+        AppPermission.processPayments,
+        message: 'ليس لديك صلاحية تسجيل المدفوعات.',
+      );
+      await _repo.recordRemainingPayment(
+        orderId: order.id,
+        actorId: actor.username,
+        method: method,
+        referenceNumber: referenceNumber,
+      );
       await loadOrders();
     } catch (e) {
+      if (isClosed) return;
       emit(state.copyWith(error: e.toString()));
     }
   }

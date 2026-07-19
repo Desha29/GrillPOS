@@ -10,6 +10,12 @@ import '../../features/reports/data/reports_repository.dart';
 import '../../features/reports/presentation/cubit/reports_cubit.dart';
 import '../../features/tables/data/tables_repository.dart';
 import '../../features/tables/presentation/cubit/tables_cubit.dart';
+import '../../features/repairs/data/repairs_repository.dart';
+import '../../features/repairs/presentation/cubit/repairs_cubit.dart';
+import '../../features/inventory/data/inventory_repository.dart';
+import '../../features/inventory/presentation/cubit/inventory_cubit.dart';
+import '../../features/computer_sales/data/computer_sales_repository.dart';
+import '../../features/computer_sales/presentation/cubit/computer_sales_cubit.dart';
 import 'package:get_it/get_it.dart';
 
 import '../../features/settings/data/data_source/restaurant_info_data_source.dart';
@@ -28,6 +34,10 @@ void setup() {
   getIt.registerLazySingleton<TablesRepository>(() => TablesRepository());
   getIt.registerLazySingleton<OrdersRepository>(() => OrdersRepository());
   getIt.registerLazySingleton<ReportsRepository>(() => ReportsRepository());
+  getIt.registerLazySingleton<RepairsRepository>(() => RepairsRepository());
+  getIt.registerLazySingleton<InventoryRepository>(() => InventoryRepository());
+  getIt.registerLazySingleton<ComputerSalesRepository>(
+      () => ComputerSalesRepository());
 
   final userRepo = UserRepositoryImp();
   getIt.registerSingleton<UserRepositoryInt>(userRepo);
@@ -49,11 +59,30 @@ void setup() {
   // GrillPOS Phase 3 Features
   getIt.registerFactory<MenuCubit>(() => MenuCubit(getIt<MenuRepository>()));
   getIt.registerFactory<TablesCubit>(
-      () => TablesCubit(getIt<TablesRepository>()));
+    () => TablesCubit(
+      getIt<TablesRepository>(),
+      currentUser: () => getIt<UserCubit>().currentUser,
+    ),
+  );
   getIt.registerFactory<OrdersCubit>(
       () => OrdersCubit(getIt<OrdersRepository>()));
   getIt.registerFactory<POSCubit>(
-      () => POSCubit(getIt<MenuRepository>(), getIt<OrdersRepository>()));
+    () => POSCubit(
+      getIt<MenuRepository>(),
+      getIt<OrdersRepository>(),
+      currentUser: () => getIt<UserCubit>().currentUser,
+    ),
+  );
   getIt.registerFactory<ReportsCubit>(
       () => ReportsCubit(getIt<ReportsRepository>()));
+  getIt.registerFactory<RepairsCubit>(
+      () => RepairsCubit(getIt<RepairsRepository>()));
+  getIt.registerFactory<InventoryCubit>(
+      () => InventoryCubit(getIt<InventoryRepository>()));
+  getIt.registerFactory<ComputerSalesCubit>(
+    () => ComputerSalesCubit(
+      getIt<ComputerSalesRepository>(),
+      currentUser: () => getIt<UserCubit>().currentUser,
+    ),
+  );
 }

@@ -70,13 +70,18 @@ class FileLogger {
     _currentLogFile = File(logFilePath);
     
     // Open in append mode
-    _logSink = _currentLogFile!.openWrite(mode: FileMode.append);
+    final sink = _currentLogFile!.openWrite(mode: FileMode.append);
     
     // Write session start marker
-    _logSink!.writeln('\n${'=' * 80}');
-    _logSink!.writeln('Session started: ${DateTime.now().toIso8601String()}');
-    _logSink!.writeln('=' * 80);
-    await _logSink!.flush();
+    sink.writeln('\n${'=' * 80}');
+    sink.writeln('Session started: ${DateTime.now().toIso8601String()}');
+    sink.writeln('=' * 80);
+    await sink.flush();
+    
+    _logSink = sink;
+    
+    // Process any queued logs
+    _processQueue();
   }
 
   /// Check if log rotation is needed
@@ -105,9 +110,13 @@ class FileLogger {
   /// Rotate log file
   Future<void> _rotateLog() async {
     try {
-      // Close current log
-      await _logSink?.flush();
-      await _logSink?.close();
+      final oldSink = _logSink;
+      _logSink = null; // Set to null immediately so other log writes are queued
+      
+      if (oldSink != null) {
+        await oldSink.flush();
+        await oldSink.close();
+      }
       
       // Open new log file
       await _openLogFile();
@@ -217,9 +226,13 @@ class FileLogger {
     
     try {
       info('FileLogger shutting down');
-      await _logSink?.flush();
-      await _logSink?.close();
+      final oldSink = _logSink;
       _logSink = null;
+      
+      if (oldSink != null) {
+        await oldSink.flush();
+        await oldSink.close();
+      }
     } catch (e) {
       print('⚠️ Error during logger shutdown: $e');
     }

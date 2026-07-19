@@ -6,8 +6,6 @@ import 'package:grill_pos/features/auth/data/models/user_model.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/functions/messege.dart';
 
-
-
 class AddEditUserDialog extends StatefulWidget {
   final User? userToEdit;
 
@@ -68,6 +66,9 @@ class _AddEditUserDialogState extends State<AddEditUserDialog> {
       username: usernameCtrl.text.trim(),
       password: passwordCtrl.text.trim(),
       userType: selectedUserType,
+      permissionKeys: selectedUserType == UserType.manager
+          ? null
+          : widget.userToEdit?.permissionKeys,
     );
 
     if (widget.userToEdit == null) {
@@ -77,12 +78,11 @@ class _AddEditUserDialogState extends State<AddEditUserDialog> {
     } else {
       getIt<UserCubit>().updateUser(user);
       MotionSnackBarSuccess(context, 'تم تعديل المستخدم بنجاح');
-      getIt<UserCubit>().getAllUsers(); 
+      getIt<UserCubit>().getAllUsers();
     }
 
     Navigator.of(context).pop(user);
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -182,28 +182,28 @@ class _AddEditUserDialogState extends State<AddEditUserDialog> {
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                      child: ElevatedButton(
-                        onPressed: _isSubmitting ? null : _submit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryColor,
-                          foregroundColor: AppColors.primaryForeground,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                    child: ElevatedButton(
+                      onPressed: _isSubmitting ? null : _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryColor,
+                        foregroundColor: AppColors.primaryForeground,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: _isSubmitting 
+                      ),
+                      child: _isSubmitting
                           ? const SizedBox(
-                              height: 20, 
-                              width: 20, 
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
-                            )
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white))
                           : Text(
                               widget.userToEdit == null
                                   ? 'إضافة المستخدم'
                                   : 'حفظ التعديلات',
                             ),
-                      ),
+                    ),
                   ),
                 ],
               ),

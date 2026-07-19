@@ -1,77 +1,81 @@
-import 'package:grill_pos/core/functions/messege.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-
-import 'package:grill_pos/core/constants/app_colors.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/functions/messege.dart';
 
 class LogoutWarningBanner extends StatelessWidget {
-  const LogoutWarningBanner({
-    super.key,
-    required this.isMobile,
-  });
+  const LogoutWarningBanner({super.key, required this.isMobile});
 
   final bool isMobile;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card(
-      elevation: 0,
-      color: AppColors.surfaceDark,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: AppColors.borderColor),
+    return Container(
+      padding: EdgeInsets.all(isMobile ? 16 : 18),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceDark,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.grillRed.withValues(alpha: .2)),
       ),
-      child: Padding(
-        padding: EdgeInsets.all(isMobile ? 12 : 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  LucideIcons.alertOctagon,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.grillRed.withValues(alpha: .1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  LucideIcons.logOut,
                   color: AppColors.grillRed,
-                  size: isMobile ? 20 : 24,
+                  size: 20,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'سيتم إنهاء يوم العمل الحالي والعودة إلى شاشة تسجيل الدخول',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.grillRed,
-                      fontSize: isMobile ? 13 : null,
+              ),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'تسجيل الخروج',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                FilledButton.icon(
-                  icon: const Icon(LucideIcons.logOut, size: 18),
-                  label: Text(isMobile ? 'خروج' : 'تسجيل الخروج'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.grillRed,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isMobile ? 12 : 16,
-                      vertical: 12,
+                    Text(
+                      'العودة بأمان إلى شاشة تسجيل الدخول',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 10,
+                      ),
                     ),
-                  ),
-                  onPressed: () => handleLogout(context),
+                  ],
                 ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 13),
+          FilledButton.icon(
+            onPressed: () => handleLogout(context),
+            icon: const Icon(LucideIcons.logOut, size: 16),
+            label: const Text('تسجيل الخروج من الحساب'),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.grillRed.withValues(alpha: .12),
+              foregroundColor: AppColors.grillRed,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
-
-  
 }

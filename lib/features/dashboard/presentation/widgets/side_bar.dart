@@ -61,6 +61,10 @@ class _CustomSidebarState extends State<CustomSidebar> {
 
     addSection('HOME', const ['dashboard']);
     addSection('SERVICE', const ['pos', 'tables', 'orders']);
+    addSection(
+      'COMPUTER CENTER',
+      const ['repairs', 'computer_sales', 'inventory'],
+    );
     addSection('MANAGEMENT', const ['menu', 'reports', 'users']);
     addSection('SYSTEM', const ['settings']);
     return entries;
@@ -69,7 +73,6 @@ class _CustomSidebarState extends State<CustomSidebar> {
   @override
   Widget build(BuildContext context) {
     final width = widget.isCollapsed ? 72.0 : 240.0;
-    final narrow = widget.isCollapsed;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -91,40 +94,52 @@ class _CustomSidebarState extends State<CustomSidebar> {
           ),
         ],
       ),
-      child: Column(
-        children: [
-          _SidebarHeader(
-            narrow: narrow,
-            collapsed: widget.isCollapsed,
-            onToggle: widget.onToggleCollapse,
-          ),
-          const SizedBox(height: 4),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              itemCount: _groupedItems().length,
-              itemBuilder: (context, index) {
-                final entry = _groupedItems()[index];
-                if (entry is _SidebarSection) {
-                  return _SectionLabel(title: entry.title, narrow: narrow);
-                }
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // AnimatedContainer passes through intermediate widths. Deriving the
+          // presentation from the real width prevents expanded rows from being
+          // rendered inside a still-collapsed 72 px sidebar during animation.
+          final effectiveNarrow = constraints.maxWidth < 160;
+          return Column(
+            children: [
+              _SidebarHeader(
+                narrow: effectiveNarrow,
+                collapsed: widget.isCollapsed,
+                onToggle: widget.onToggleCollapse,
+              ),
+              const SizedBox(height: 4),
+              Expanded(
+                child: ListView.builder(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  itemCount: _groupedItems().length,
+                  itemBuilder: (context, index) {
+                    final entry = _groupedItems()[index];
+                    if (entry is _SidebarSection) {
+                      return _SectionLabel(
+                        title: entry.title,
+                        narrow: effectiveNarrow,
+                      );
+                    }
 
-                final item = entry as SidebarItem;
-                final originalIndex = widget.items.indexOf(item);
-                return _SidebarNavigationItem(
-                  item: item,
-                  narrow: narrow,
-                  selected: widget.selectedIndex == originalIndex,
-                  onTap: () => widget.onItemSelected(originalIndex),
-                );
-              },
-            ),
-          ),
-          _SidebarFooter(
-            narrow: narrow,
-            onLogout: () => handleLogout(context),
-          ),
-        ],
+                    final item = entry as SidebarItem;
+                    final originalIndex = widget.items.indexOf(item);
+                    return _SidebarNavigationItem(
+                      item: item,
+                      narrow: effectiveNarrow,
+                      selected: widget.selectedIndex == originalIndex,
+                      onTap: () => widget.onItemSelected(originalIndex),
+                    );
+                  },
+                ),
+              ),
+              _SidebarFooter(
+                narrow: effectiveNarrow,
+                onLogout: () => handleLogout(context),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -228,7 +243,8 @@ class _SidebarHeader extends StatelessWidget {
                     if (onToggle != null)
                       IconButton(
                         onPressed: onToggle,
-                        tooltip: collapsed ? 'Expand sidebar' : 'Collapse sidebar',
+                        tooltip:
+                            collapsed ? 'Expand sidebar' : 'Collapse sidebar',
                         visualDensity: VisualDensity.compact,
                         icon: Icon(
                           collapsed

@@ -1,10 +1,11 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'dart:typed_data';
 
 import '../../orders/data/order_models.dart';
 import '../../../core/constants/app_colors.dart';
@@ -63,25 +64,7 @@ class InvoiceScreen extends StatelessWidget {
                         children: [
                           Padding(
                             padding: const EdgeInsets.only(bottom: 12),
-                            child: restaurantLogo != null &&
-                                    restaurantLogo!.isNotEmpty
-                                ? Image.file(
-                                    File(restaurantLogo!),
-                                    key: ValueKey(File(restaurantLogo!)
-                                        .lastModifiedSync()
-                                        .millisecondsSinceEpoch),
-                                    height: 64,
-                                    width: 64,
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (_, __, ___) => Image.asset(
-                                        'assets/images/grillpos/logo_icon.png',
-                                        height: 64,
-                                        width: 64),
-                                  )
-                                : Image.asset(
-                                    'assets/images/grillpos/logo_icon.png',
-                                    height: 64,
-                                    width: 64),
+                            child: _buildRestaurantLogo(),
                           ),
                           // Restaurant Name
                           Text(
@@ -330,6 +313,37 @@ class InvoiceScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildRestaurantLogo() {
+    final configuredPath = restaurantLogo?.trim();
+    if (configuredPath != null && configuredPath.isNotEmpty) {
+      try {
+        final file = File(configuredPath);
+        if (file.existsSync()) {
+          return Image.file(
+            file,
+            key: ValueKey(
+              '$configuredPath:${file.lastModifiedSync().millisecondsSinceEpoch}',
+            ),
+            height: 64,
+            width: 64,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => _defaultLogo(),
+          );
+        }
+      } on FileSystemException {
+        // A moved, deleted, or inaccessible custom logo must not block checkout.
+      }
+    }
+    return _defaultLogo();
+  }
+
+  Widget _defaultLogo() => Image.asset(
+        'assets/images/grillpos/logo_icon.png',
+        height: 64,
+        width: 64,
+        fit: BoxFit.contain,
+      );
+
   Widget _invoiceInfoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
@@ -376,8 +390,12 @@ class InvoiceScreen extends StatelessWidget {
   }
 
   Future<Uint8List> _buildPdf() async {
-    final font = await PdfGoogleFonts.cairoRegular();
-    final fontBold = await PdfGoogleFonts.cairoBold();
+    final font = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/Amiri-Regular.ttf'),
+    );
+    final fontBold = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/Amiri-Bold.ttf'),
+    );
 
     final doc = pw.Document(
       theme: pw.ThemeData.withFont(
@@ -387,10 +405,15 @@ class InvoiceScreen extends StatelessWidget {
     );
 
     pw.MemoryImage? pdfLogo;
-    if (restaurantLogo != null && restaurantLogo!.isNotEmpty) {
-      final file = File(restaurantLogo!);
-      if (file.existsSync()) {
-        pdfLogo = pw.MemoryImage(file.readAsBytesSync());
+    final configuredPath = restaurantLogo?.trim();
+    if (configuredPath != null && configuredPath.isNotEmpty) {
+      try {
+        final file = File(configuredPath);
+        if (await file.exists()) {
+          pdfLogo = pw.MemoryImage(await file.readAsBytes());
+        }
+      } on FileSystemException {
+        // Continue without a custom logo when the saved path is stale.
       }
     }
 

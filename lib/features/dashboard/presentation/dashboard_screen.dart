@@ -25,6 +25,9 @@ import '../../orders/presentation/orders_screen.dart';
 import '../../menu/presentation/menu_management_screen.dart';
 import '../../reports/presentation/reports_screen.dart';
 import '../../auth/presentation/user_management_screen.dart';
+import '../../repairs/presentation/repairs_screen.dart';
+import '../../inventory/presentation/inventory_screen.dart';
+import '../../computer_sales/presentation/computer_sales_screen.dart';
 
 import '../../reports/presentation/cubit/reports_cubit.dart';
 import '../../reports/presentation/report_details_screen.dart';
@@ -41,7 +44,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool isSidebarCollapsed = false;
 
   late final User curUser = getIt<UserCubit>().currentUser;
-  
+
   @override
   void initState() {
     super.initState();
@@ -80,31 +83,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
         screen: const OrdersScreen(),
       ),
       SidebarItem(
-        id: 'menu',
-        icon: LucideIcons.bookOpen,
-        title: "المنيو",
-        screen: const MenuManagementScreen(),
+        id: 'repairs',
+        icon: LucideIcons.monitorCog,
+        title: "صيانة الكمبيوتر",
+        screen: const RepairsScreen(),
       ),
-      if (curUser.userType == UserType.manager)
+      if (PermissionGuard.can(curUser, AppPermission.processComputerSales))
+        SidebarItem(
+          id: 'computer_sales',
+          icon: LucideIcons.badgeDollarSign,
+          title: "مبيعات الكمبيوتر",
+          screen: const ComputerSalesScreen(),
+        ),
+      if (PermissionGuard.can(curUser, AppPermission.manageInventory))
+        SidebarItem(
+          id: 'inventory',
+          icon: LucideIcons.warehouse,
+          title: "المخزون والمنتجات",
+          screen: const InventoryScreen(),
+        ),
+      if (PermissionGuard.can(curUser, AppPermission.manageMenu))
+        SidebarItem(
+          id: 'menu',
+          icon: LucideIcons.bookOpen,
+          title: "المنيو",
+          screen: const MenuManagementScreen(),
+        ),
+      if (PermissionGuard.can(curUser, AppPermission.viewReports))
         SidebarItem(
           id: 'reports',
           icon: LucideIcons.barChart3,
           title: "التقارير",
           screen: const ReportsScreen(),
         ),
-      if (curUser.userType == UserType.manager)
+      if (PermissionGuard.can(curUser, AppPermission.manageUsers))
         SidebarItem(
           id: 'users',
           icon: LucideIcons.shieldCheck,
           title: "المستخدمون",
           screen: const UserManagementScreen(),
         ),
-      SidebarItem(
-        id: 'settings',
-        icon: LucideIcons.settings2,
-        title: "الإعدادات",
-        screen: const SettingsScreen(),
-      ),
+      if (PermissionGuard.can(curUser, AppPermission.manageSettings))
+        SidebarItem(
+          id: 'settings',
+          icon: LucideIcons.settings2,
+          title: "الإعدادات",
+          screen: const SettingsScreen(),
+        ),
     ];
   }
 
@@ -125,21 +150,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   context: context,
                   barrierDismissible: false,
                   builder: (c) => Center(
-                    child: CircularProgressIndicator(color: AppColors.warmOrange),
+                    child:
+                        CircularProgressIndicator(color: AppColors.warmOrange),
                   ),
                 );
               } else if (state is UserSuccessWithReport) {
                 // Ensure we pop the loading dialog if it's there
                 Navigator.of(context, rootNavigator: true).pop();
-                
+
                 final userCubit = getIt<UserCubit>();
                 if (userCubit.currentUser.userType == UserType.manager) {
                   _showShiftReport(context, state.report as String);
                 } else {
-                  MotionSnackBarSuccess(context, "تم إغلاق اليوم بنجاح. جاري تسجيل الخروج...");
+                  MotionSnackBarSuccess(
+                      context, "تم إغلاق اليوم بنجاح. جاري تسجيل الخروج...");
                   Future.delayed(const Duration(milliseconds: 1500), () {
                     userCubit.logout();
-                    Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                    Navigator.of(context)
+                        .pushNamedAndRemoveUntil('/login', (route) => false);
                   });
                 }
               } else if (state is UserFailure) {
@@ -221,13 +249,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _onSidebarSelected(BuildContext context, int index) {
     final sidebarItems = _getSidebarItems(context);
     final item = sidebarItems[index];
-    if (item.id == 'reports') {
-      try {
-        PermissionGuard.checkReportAccess(curUser);
-      } catch (e) {
-        MotionSnackBarError(context, e.toString());
-        return;
-      }
+    try {
+      PermissionGuard.checkRouteAccess(curUser, item.id);
+    } on PermissionDeniedException catch (error) {
+      MotionSnackBarError(context, error.message);
+      return;
     }
 
     setState(() {
@@ -245,7 +271,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (index != -1) {
       _onSidebarSelected(context, index);
     } else {
-      MotionSnackBarWarning(context, "الشاشة غير متاحة");
+      if (!PermissionGuard.canAccessRoute(curUser, id)) {
+        MotionSnackBarError(context, 'ليس لديك صلاحية للوصول إلى هذه الشاشة.');
+      } else {
+        MotionSnackBarWarning(context, "الشاشة غير متاحة حالياً");
+      }
     }
   }
 
@@ -279,12 +309,16 @@ class _ShiftReportDialog extends StatelessWidget {
                 color: AppColors.successGreen.withOpacity(0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(LucideIcons.checkCircle2, color: AppColors.successGreen, size: 40),
+              child: const Icon(LucideIcons.checkCircle2,
+                  color: AppColors.successGreen, size: 40),
             ),
             const SizedBox(height: 16),
             Text(
               'تم إغلاق الوردية بنجاح',
-              style: TextStyle(color: AppColors.cream, fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: AppColors.cream,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
@@ -301,10 +335,12 @@ class _ShiftReportDialog extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _reportRow('رقم الوردية', shiftId.substring(0, 8).toUpperCase()),
+                  _reportRow(
+                      'رقم الوردية', shiftId.substring(0, 8).toUpperCase()),
                   const Divider(height: 24),
                   _reportRow('الحالة', 'مغلقة'),
-                  _reportRow('الوقت', DateFormat('HH:mm').format(DateTime.now())),
+                  _reportRow(
+                      'الوقت', DateFormat('HH:mm').format(DateTime.now())),
                 ],
               ),
             ),
@@ -316,10 +352,12 @@ class _ShiftReportDialog extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.warmOrange,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
                 ),
                 onPressed: () => Navigator.pop(context),
-                child: const Text('موافق', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text('موافق',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 12),
@@ -345,7 +383,8 @@ class _ShiftReportDialog extends StatelessWidget {
               },
               icon: const Icon(LucideIcons.fileText, size: 16),
               label: const Text('عرض التقرير التفصيلي'),
-              style: TextButton.styleFrom(foregroundColor: AppColors.warmOrange),
+              style:
+                  TextButton.styleFrom(foregroundColor: AppColors.warmOrange),
             ),
           ],
         ),
@@ -359,8 +398,13 @@ class _ShiftReportDialog extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: AppColors.mutedColor, fontSize: 14)),
-          Text(value, style: TextStyle(color: AppColors.cream, fontWeight: FontWeight.bold, fontSize: 14)),
+          Text(label,
+              style: TextStyle(color: AppColors.mutedColor, fontSize: 14)),
+          Text(value,
+              style: TextStyle(
+                  color: AppColors.cream,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14)),
         ],
       ),
     );

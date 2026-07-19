@@ -1,12 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:grill_pos/features/auth/presentation/cubit/user_cubit.dart';
-import '../../../auth/data/models/user_model.dart';
 import '../../data/models/restaurant_info_model.dart';
 import '../../domain/repository/settings_repository_int.dart';
 import 'settings_states.dart';
 import '../../../../core/di/dependency_injection.dart';
 import '../../../../core/services/activity_logger.dart';
 import '../../../../core/data/models/activity_log.dart';
+import '../../../../core/security/permission_guard.dart';
 
 class SettingsCubit extends Cubit<SettingsStates> {
   SettingsCubit({
@@ -84,7 +84,10 @@ class SettingsCubit extends Cubit<SettingsStates> {
 
   bool isAdmin() {
     try {
-      return userCubit.currentUser.userType == UserType.manager; // Fixed
+      return PermissionGuard.can(
+        userCubit.currentUser,
+        AppPermission.manageSettings,
+      );
     } catch (e) {
       return false;
     }

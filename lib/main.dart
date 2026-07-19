@@ -9,9 +9,9 @@ import 'package:screen_retriever/screen_retriever.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:device_preview/device_preview.dart';
-import 'package:flutter/foundation.dart';
 
 import 'core/constants/bloc_observer.dart';
+import 'core/constants/app_colors.dart';
 import 'core/di/dependency_injection.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
@@ -27,6 +27,8 @@ import 'core/services/activity_logger.dart';
 import 'core/data/services/recovery_service.dart';
 import 'core/data/services/checkpoint_service.dart';
 import 'core/data/services/backup_manager.dart';
+import 'core/config/app_environment.dart';
+import 'core/data/services/debug_data_seeder.dart';
 
 Future<void> _initializePersistenceSystem() async {
   try {
@@ -38,6 +40,11 @@ Future<void> _initializePersistenceSystem() async {
 
       FileLogger.info('Persistence system initialized successfully',
           source: 'Init');
+
+      if (AppEnvironment.shouldSeedDebugData) {
+        await DebugDataSeeder.seed();
+        FileLogger.info('Debug demo data refreshed', source: 'Init');
+      }
 
       try {
         final settings = await PersistenceInitializer.settingsRepository!
@@ -95,6 +102,7 @@ void main() async {
         }
 
         Bloc.observer = MyBlocObserver();
+        debugPrint('🚀 GrillPOS mode: ${AppEnvironment.displayName}');
 
         // 2. Setup Dependency Injection
         setup();
@@ -114,17 +122,19 @@ void main() async {
         }
 
         // 4. Check activation and Run App
-        bool fileExists = await File(requiredFilePath).exists();
-        if (fileExists) {
+        final fileExists = await File(requiredFilePath).exists();
+        final canStart = AppEnvironment.isDebug || fileExists;
+        if (canStart) {
           FileLogger.info('App starting normally', source: 'Main');
           runApp(DevicePreview(
-            enabled: kReleaseMode,
+            enabled:
+                AppEnvironment.isDebug && AppEnvironment.enableDevicePreview,
             builder: (context) => const MyApp(),
           ));
         } else {
           FileLogger.info('App starting in activation mode', source: 'Main');
           runApp(DevicePreview(
-            enabled: kReleaseMode,
+            enabled: false,
             builder: (contest) => const ActivationScreen(),
           ));
         }
@@ -195,7 +205,7 @@ class MyApp extends StatelessWidget {
               useInheritedMediaQuery: true,
               locale: DevicePreview.locale(context),
               navigatorKey: navigatorKey,
-              title: 'GrillPOS',
+              title: AppEnvironment.isDebug ? 'GrillPOS [DEBUG]' : 'GrillPOS',
               debugShowCheckedModeBanner: false,
               theme: AppTheme.lightTheme,
               darkTheme: AppTheme.darkTheme,
@@ -226,7 +236,14 @@ class MyApp extends StatelessWidget {
                   },
                   child: Directionality(
                     textDirection: TextDirection.rtl,
-                    child: previewChild,
+                    child: AppEnvironment.isDebug
+                        ? Banner(
+                            message: 'DEBUG',
+                            location: BannerLocation.topStart,
+                            color: AppColors.warmOrange,
+                            child: previewChild,
+                          )
+                        : previewChild,
                   ),
                 );
               },

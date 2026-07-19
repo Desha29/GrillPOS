@@ -1,11 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/security/permission_guard.dart';
+import '../../../auth/data/models/user_model.dart';
 import '../../../menu/data/menu_models.dart';
 import '../../../menu/data/menu_repository.dart';
 import '../../../orders/data/order_models.dart';
 import '../../../orders/data/orders_repository.dart';
-import '../../../../core/di/dependency_injection.dart';
-import '../../../tables/data/tables_repository.dart';
-import '../../../tables/presentation/cubit/tables_cubit.dart';
 
 class PosCartItem {
   final MenuItem item;
@@ -79,8 +78,14 @@ class POSState {
 class POSCubit extends Cubit<POSState> {
   final MenuRepository _menuRepo;
   final OrdersRepository _ordersRepo;
+  final User Function() _currentUser;
 
-  POSCubit(this._menuRepo, this._ordersRepo) : super(const POSState());
+  POSCubit(
+    this._menuRepo,
+    this._ordersRepo, {
+    required User Function() currentUser,
+  })  : _currentUser = currentUser,
+        super(const POSState());
 
   Future<void> loadMenu(
       {String? categoryId, bool clearCategory = false}) async {
@@ -127,7 +132,8 @@ class POSCubit extends Cubit<POSState> {
     }
 
     final updated = [...state.cart];
-    updated[idx] = updated[idx].copyWith(quantity: updated[idx].quantity + quantity);
+    updated[idx] =
+        updated[idx].copyWith(quantity: updated[idx].quantity + quantity);
     emit(state.copyWith(cart: updated));
   }
 
@@ -168,47 +174,39 @@ class POSCubit extends Cubit<POSState> {
     emit(state.copyWith(cart: []));
   }
 
-  Future<RestaurantOrder?> checkout(
-      {String? cashierId, String? waiterId, String? notes}) async {
+  Future<RestaurantOrder?> checkout({String? waiterId, String? notes}) async {
     if (state.cart.isEmpty) return null;
 
     emit(state.copyWith(loading: true, clearError: true));
     try {
-      final order = await _ordersRepo.createOrder(
+      final actor = _currentUser();
+      PermissionGuard.require(
+        actor,
+        AppPermission.createOrders,
+        message: 'ليس لديك صلاحية إنشاء الطلبات من نقطة البيع.',
+      );
+      final order = await _ordersRepo.createOrderWithItems(
+        items: state.cart
+            .map(
+              (cartItem) => NewOrderLine(
+                menuItemId: cartItem.item.id,
+                itemName: cartItem.item.displayName,
+                unit: cartItem.item.unit,
+                quantity: cartItem.quantity,
+                unitPrice: cartItem.item.price,
+              ),
+            )
+            .toList(growable: false),
         tableId: state.selectedTableId,
         orderType: state.orderType,
-        cashierId: cashierId,
+        cashierId: actor.username,
         waiterId: waiterId,
         notes: notes,
         taxRate: state.taxRate,
       );
 
-      for (final c in state.cart) {
-        await _ordersRepo.addOrderItem(
-          orderId: order.id,
-          menuItemId: c.item.id,
-          itemName: c.item.displayName,
-          unit: c.item.unit,
-          quantity: c.quantity,
-          unitPrice: c.item.price,
-          taxRate: state.taxRate,
-        );
-      }
-
-      if (state.selectedTableId != null &&
-          state.orderType == OrderType.dineIn) {
-        try {
-          await getIt<TablesRepository>()
-              .assignOrder(state.selectedTableId!, order.id);
-          getIt<TablesCubit>().loadTables();
-        } catch (_) {}
-      }
-
-      // Fetch the complete order with items for the invoice
-      final completeOrder = await _ordersRepo.getOrderById(order.id);
-
       emit(state.copyWith(loading: false, cart: []));
-      return completeOrder ?? order;
+      return order;
     } catch (e) {
       emit(state.copyWith(loading: false, error: e.toString()));
       return null;
